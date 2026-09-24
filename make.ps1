@@ -120,6 +120,7 @@ switch ($Target.ToLowerInvariant()) {
             @('fx',            'Load BRL->USD ECB rates into bronze: -Rest 2016-08-25,2018-10-31 (default range)'),
             @('reconcile',     'Silver vs Postgres, every live row and column (chaos keys counted, not hidden)'),
             @('superset-build', 'Rebuild the 4 dashboards via the Superset API and export them to superset/dashboards'),
+            @('demo',          'From a clean clone: fetch, up, replay at full speed, build, then the end-to-end gate'),
             @('drills',        'Failure drills: kill Connect, kill Spark, restart Kafka (evidence -> automation/runs/m2-s3)')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
@@ -177,6 +178,15 @@ switch ($Target.ToLowerInvariant()) {
     }
     'reconcile'     { Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/reconcile.py', '--write') }
     'superset-build' { Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/superset_dashboards.py') }
+    'demo'          {
+        # The whole pipeline, unattended: the replay runs as fast as Postgres allows unless
+        # REPLAY_SPEED is set, then demo_acceptance.py waits for every layer and checks it.
+        & $PSCommandPath fetch
+        & $PSCommandPath up
+        if (-not $env:REPLAY_SPEED) { $env:REPLAY_SPEED = '0' }
+        & $PSCommandPath replay
+        Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/demo_acceptance.py')
+    }
     'drills'        {
         $env:OLIST_STACK_REQUIRED = '1'
         Invoke-Uv @('run', '--group', 'integration', 'pytest', 'tests/integration/test_drills.py', '-s')

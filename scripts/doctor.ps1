@@ -15,7 +15,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Project = 'olist-lakehouse'
+# COMPOSE_PROJECT_NAME overrides compose.yaml's `name:` (the clean-clone demo runs as its own project).
+$Project = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME } else { 'olist-lakehouse' }
 # The 2xxxx port family (CLAUDE.md fleet ledger). Later stories' ports are claimed now, so a
 # collision shows up on day one rather than in M4.
 $Ports = [ordered]@{
