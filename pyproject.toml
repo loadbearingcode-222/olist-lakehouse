@@ -75,6 +75,12 @@ ignore_missing_imports = true
 follow_imports = "skip"
 
 [[tool.mypy.overrides]]
+# Airflow runs in its own image (tests/dags are executed there, not on the host).
+module = ["airflow", "airflow.*", "pendulum", "pendulum.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
 # PySpark comes from the Spark image (docker/spark/), not from uv.lock.
 module = ["pyspark", "pyspark.*"]
 ignore_missing_imports = true

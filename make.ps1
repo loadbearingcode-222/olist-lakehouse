@@ -43,6 +43,13 @@ function New-Secret {
     return -join ($bytes | ForEach-Object { $alphabet[$_ % $alphabet.Length] })
 }
 
+function New-FernetKey {
+    # A Fernet key is 32 random bytes, URL-safe base64 (what Airflow encrypts connections with).
+    $bytes = New-Object byte[] 32
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    return [Convert]::ToBase64String($bytes).Replace('+', '-').Replace('/', '_')
+}
+
 function Invoke-Env {
     $values = @{
         'MINIO_ROOT_USER'           = 'olist-admin'
@@ -51,6 +58,9 @@ function Invoke-Env {
         'LAKEKEEPER_ENCRYPTION_KEY' = (New-Secret 48)
         'SOURCE_DB_PASSWORD'        = (New-Secret)
         'DEBEZIUM_DB_PASSWORD'      = (New-Secret)
+        'AIRFLOW_ADMIN_PASSWORD'    = (New-Secret 16)
+        'AIRFLOW_FERNET_KEY'        = (New-FernetKey)
+        'AIRFLOW_JWT_SECRET'        = (New-Secret 48)
     }
     $keys = @(Get-Content -LiteralPath '.env.example' | Where-Object { $_ -match '^([A-Z0-9_]+)=$' } | ForEach-Object { $_.TrimEnd('=') })
     $missing = @($keys | Where-Object { -not $values.ContainsKey($_) })
@@ -128,6 +138,7 @@ switch ($Target.ToLowerInvariant()) {
         Write-Host '  MinIO console  ->  http://localhost:29001   (MINIO_ROOT_USER / _PASSWORD in .env)' -ForegroundColor Green
         Write-Host '  Lakekeeper UI  ->  http://localhost:28181/ui' -ForegroundColor Green
         Write-Host '  Trino UI       ->  http://localhost:28090   (any user name, no password)' -ForegroundColor Green
+        Write-Host '  Airflow        ->  http://localhost:28082   (admin / AIRFLOW_ADMIN_PASSWORD in .env)' -ForegroundColor Green
         Write-Host ''
     }
     'down'      { Invoke-Compose @('down') }

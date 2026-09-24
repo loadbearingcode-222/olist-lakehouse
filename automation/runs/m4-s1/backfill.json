@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-09-24T16:53:29+00:00",
+  "range": [
+    "2016-08-25",
+    "2018-10-31"
+  ],
+  "backfill_runs": {
+    "success": 798
+  },
+  "backfill_minutes": 25.1,
+  "expected_business_days": 560,
+  "stored_business_days": 560,
+  "missing_days": [],
+  "unexpected_days": [],
+  "rerun_2017_03_15_rows_before": 561,
+  "rerun_2017_03_15_rows_after": 561
+}

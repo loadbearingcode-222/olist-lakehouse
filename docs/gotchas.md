@@ -133,3 +133,17 @@ Entries above the seed line were paid for by earlier projects on this machine
     uses it, but only the models you rebuilt got the column. `on_schema_change: fail` is doing
     its job. *Check:* after editing a macro, `dbt ls --select` its dependents, and full-refresh
     all of them, not only the ones you were working on. (M3-S2, left over from M3-S1)
+36. **A backfill crawls: most runs `up_for_retry` with `ICEBERG_COMMIT_ERROR ... Found
+    conflicting files`.** Concurrent MERGEs into one Iceberg table conflict (optimistic
+    concurrency). Weekend runs made it certain: the API answers a Saturday with Friday's
+    rate, so three runs MERGEd the same row at once. *Check:* the task log's Trino error name.
+    Fix: write only in-range rows, one writer per table (an Airflow pool with 1 slot), and
+    retry commit conflicts. (M4-S1)
+37. **`DagBag(include_examples=False)` raises TypeError on Airflow 3.3.** The argument is
+    gone; examples follow `AIRFLOW__CORE__LOAD_EXAMPLES`. *Check:*
+    `inspect.signature(DagBag.__init__)` in the image. (M4-S1)
+38. **A daily backfill `--to-date D` loads everything but day D.** Backfill dates are
+    `data_interval_start` values, and with a `0 6 * * *` schedule the interval for day D
+    starts at D 06:00, after `--to-date D` (00:00). *Check:* schedule daily intervals at
+    `0 0 * * *`, so an interval is exactly a calendar day; compare the stored dates with the
+    API's own list, never with a count. (M4-S1)
