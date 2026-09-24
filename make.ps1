@@ -40,7 +40,8 @@ switch ($Target.ToLowerInvariant()) {
             @('format',    'Auto-fix formatting and lint rules'),
             @('typecheck', 'Type-check with mypy (strict)'),
             @('test',      'Run unit tests (fast, no containers)'),
-            @('check',     'Everything the CI quality job runs, locally')
+            @('check',     'Everything the CI quality job runs, locally'),
+            @('fetch',     'Download Olist from Kaggle, verify sha256 + contract')
         ) | ForEach-Object { '    {0,-12} {1}' -f $_[0], $_[1] }
         Write-Host ''
     }
@@ -50,6 +51,7 @@ switch ($Target.ToLowerInvariant()) {
     'format'    { Invoke-Uv @('run', 'ruff', 'check', '--fix', '.'); Invoke-Uv @('run', 'ruff', 'format', '.') }
     'typecheck' { Invoke-Uv @('run', 'mypy') }
     'test'      { Invoke-Uv @('run', 'pytest', 'tests/unit') }
+    'fetch'     { Invoke-Uv @('run', 'python', '-m', 'olist_lakehouse.fetch') }
     'check'     {
         & $PSCommandPath sync
         & $PSCommandPath lint

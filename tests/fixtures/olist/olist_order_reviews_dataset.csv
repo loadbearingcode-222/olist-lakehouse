@@ -1,0 +1,4 @@
+"review_id","order_id","review_score","review_comment_title","review_comment_message","review_creation_date","review_answer_timestamp"
+r0000000000000000000000000000001,o0000000000000000000000000000001,4,,"Chegou antes do prazo.
+Recomendo, "ótimo"!",2017-10-11 00:00:00,2017-10-12 03:43:48
+r0000000000000000000000000000002,o0000000000000000000000000000002,1,,,2017-10-20 00:00:00,2017-10-21 10:00:00

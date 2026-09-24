@@ -166,7 +166,7 @@ wheels = [
 [[package]]
 name = "olist-lakehouse"
 version = "0.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [
