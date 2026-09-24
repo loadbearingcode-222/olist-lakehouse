@@ -122,3 +122,14 @@ Entries above the seed line were paid for by earlier projects on this machine
     FULL, every later update re-sends the whole row, bad value included. The gate refuses the
     message that *introduced* the defect, not the value. *Check:* silver's `_dq_issues` column
     (row-level checks on current state); gold filters on it. (M3-S1)
+34. **A currency conversion is a cent off on a handful of rows.** `sum()` widens a
+    `decimal(12,2)` to `decimal(38,2)`. Multiplying that by a `decimal(18,10)` rate needs more
+    than 38 digits, so Trino silently reduces the product's scale, and the later `round(x, 2)`
+    rounds twice (18.1149996 became 18.115, then 18.12). *Check:* cast aggregates back to a
+    small precision before multiplying, and test `amount = round(brl * rate, 2)` on every
+    row. (M3-S2)
+35. **Seven silver models fail with "source and target schemas are out of sync".** A column
+    added in a SHARED macro (`_dq_issues` in `cdc_current_state`) changes every model that
+    uses it, but only the models you rebuilt got the column. `on_schema_change: fail` is doing
+    its job. *Check:* after editing a macro, `dbt ls --select` its dependents, and full-refresh
+    all of them, not only the ones you were working on. (M3-S2, left over from M3-S1)

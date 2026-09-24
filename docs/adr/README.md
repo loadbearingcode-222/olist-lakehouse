@@ -23,3 +23,4 @@ Date: YYYY-MM-DD · Story: M#-S# · Status: accepted | superseded by NNNN
 | [0003](0003-spark-streaming-bronze.md) | Spark 4.1 + Iceberg 1.11 streaming bronze, exactly once by offset anti-join | M2-S1 |
 | [0004](0004-quality-gate-quarantine.md) | Quality gate: named rules, quarantine routing, GX as second opinion | M2-S2 |
 | [0005](0005-silver-cdc-merge.md) | Silver: LSN-guarded CDC merge, soft deletes, current-state quality flags | M3-S1 |
+| [0006](0006-gold-star-schema.md) | Gold: star schema, SCD2 from the CDC log, FX as of the purchase day | M3-S2 |

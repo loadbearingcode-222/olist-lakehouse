@@ -23,6 +23,12 @@ models:
       +materialized: incremental
       +incremental_strategy: merge
       +on_schema_change: fail
+    # Gold: the star schema consumers read. Rebuilt from silver, with columns and types enforced.
+    gold:
+      +schema: "{{ var('gold_schema', 'gold') }}"
+      +materialized: table
+      +contract:
+        enforced: true
 
 vars:
   # Re-read this much bronze behind the last merged batch on every incremental run. Rows are
