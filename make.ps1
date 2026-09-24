@@ -41,23 +41,34 @@ function New-Secret {
 }
 
 function Invoke-Env {
-    if (Test-Path -LiteralPath '.env') {
-        Write-Host '.env already exists - leaving it alone.'
-        return
-    }
     $values = @{
         'MINIO_ROOT_USER'           = 'olist-admin'
         'MINIO_ROOT_PASSWORD'       = (New-Secret)
         'PLATFORM_DB_PASSWORD'      = (New-Secret)
         'LAKEKEEPER_ENCRYPTION_KEY' = (New-Secret 48)
+        'SOURCE_DB_PASSWORD'        = (New-Secret)
+    }
+    $keys = @(Get-Content -LiteralPath '.env.example' | Where-Object { $_ -match '^([A-Z0-9_]+)=$' } | ForEach-Object { $_.TrimEnd('=') })
+    $missing = @($keys | Where-Object { -not $values.ContainsKey($_) })
+    if ($missing.Count -gt 0) { throw "make.ps1 env has no generator for: $($missing -join ', ')" }
+    $path = Join-Path $PSScriptRoot '.env'
+    if (Test-Path -LiteralPath $path) {
+        # Never rewrite an existing secret (volumes were initialised with it); only add new keys.
+        $present = @(Get-Content -LiteralPath $path | Where-Object { $_ -match '^([A-Z0-9_]+)=' } | ForEach-Object { ($_ -split '=', 2)[0] })
+        $added = @($keys | Where-Object { $present -notcontains $_ })
+        if ($added.Count -eq 0) { Write-Host '.env already complete - leaving it alone.'; return }
+        $text = [System.IO.File]::ReadAllText($path)
+        if ($text.Length -gt 0 -and -not $text.EndsWith("`n")) { $text += "`n" }
+        $text += (($added | ForEach-Object { "$_=$($values[$_])" }) -join "`n") + "`n"
+        [System.IO.File]::WriteAllText($path, $text)
+        Write-Host ".env: added $($added -join ', ') (existing values untouched)."
+        return
     }
     $lines = Get-Content -LiteralPath '.env.example' | ForEach-Object {
-        if ($_ -match '^([A-Z0-9_]+)=$' -and $values.ContainsKey($Matches[1])) { "$($Matches[1])=$($values[$Matches[1]])" } else { $_ }
+        if ($_ -match '^([A-Z0-9_]+)=$') { "$($Matches[1])=$($values[$Matches[1]])" } else { $_ }
     }
-    $missing = @(Get-Content -LiteralPath '.env.example' | Where-Object { $_ -match '^([A-Z0-9_]+)=$' -and -not $values.ContainsKey($Matches[1]) })
-    if ($missing.Count -gt 0) { throw "make.ps1 env has no generator for: $($missing -join ', ')" }
     # UTF-8 without BOM, LF endings: compose and containers read this file.
-    [System.IO.File]::WriteAllText((Join-Path $PSScriptRoot '.env'), (($lines -join "`n") + "`n"))
+    [System.IO.File]::WriteAllText($path, (($lines -join "`n") + "`n"))
     Write-Host '.env written with generated secrets (never commit it).'
 }
 
@@ -82,7 +93,11 @@ switch ($Target.ToLowerInvariant()) {
             @('ps',        'Show container status'),
             @('logs',      'Tail logs from all services'),
             @('reset',     'Stop the stack AND delete its volumes (needs -Force)'),
-            @('test-integration', 'Integration tests against the running stack')
+            @('test-integration', 'Integration tests against the running stack'),
+            @('replay',        'Start (or resume) the Olist replayer in the background'),
+            @('replay-stop',   'Stop the replayer (it resumes from its checkpoint later)'),
+            @('replay-status', 'Where the replay is, in events and business time'),
+            @('replay-verify', 'Row counts + chaos ledger match the checkpoint?')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
     }
@@ -116,6 +131,10 @@ switch ($Target.ToLowerInvariant()) {
         $env:OLIST_STACK_REQUIRED = '1'
         Invoke-Uv @('run', '--group', 'integration', 'pytest', 'tests/integration', '-m', 'integration')
     }
+    'replay'        { Invoke-Compose @('--profile', 'replay', 'up', '-d', '--build', 'replayer') }
+    'replay-stop'   { Invoke-Compose @('--profile', 'replay', 'stop', 'replayer') }
+    'replay-status' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--status') }
+    'replay-verify' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--verify') }
     'check'     {
         & $PSCommandPath sync
         & $PSCommandPath lint

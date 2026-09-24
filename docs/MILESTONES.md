@@ -36,8 +36,10 @@ olist-lakehouse/
 ├─ pyproject.toml · uv.lock · .python-version           M0-S1  uv, Python 3.12, ruff, mypy, pytest
 ├─ .pre-commit-config.yaml                              M0-S1
 ├─ .env.example                                         M0-S3  keys only
+├─ .dockerignore                                        M1-S1  keeps data/ and .venv/ out of image builds
 ├─ compose.yaml                                         M0-S3  grows: lake core (M0) → cdc (M1) → spark (M2) → airflow (M4) → superset (M5)
 ├─ docker/
+│  ├─ app/                                              M1-S1  Python image: replayer (M1-S1), clickstream producer (M1-S3)
 │  ├─ postgres-source/                                  M1-S1  OLTP init SQL, wal_level=logical
 │  ├─ connect/                                          M1-S2  Debezium Connect image + plugin pins
 │  ├─ spark/                                            M2-S1  Iceberg + Kafka jars, GX, job entrypoint

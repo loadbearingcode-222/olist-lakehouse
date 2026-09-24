@@ -89,3 +89,7 @@ Entries above the seed line were paid for by earlier projects on this machine
 26. **`compose up` does not re-run a one-shot service that already exited 0**, so a second
     `up` never exercised the bootstrap. *Check:* prove idempotence with
     `docker compose run --rm <one-shot>`. (M0-S3)
+27. **Every Postgres connection from the Windows host takes seconds, or hangs.** `localhost`
+    resolves to `::1` first, and libpq waits for that attempt to time out, because the stack
+    publishes ports on `127.0.0.1` only. *Check:* connect to `127.0.0.1` (instant) versus
+    `localhost` with `connect_timeout=5` (exactly 5 s). Host-side clients use `127.0.0.1`. (M1-S1)

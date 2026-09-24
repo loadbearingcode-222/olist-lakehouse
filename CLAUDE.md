@@ -79,7 +79,16 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 .\make.ps1 up          # env + doctor + compose up --wait (lake core: MinIO, Lakekeeper, Trino)
 .\make.ps1 test-integration   # round-trip through the running stack
 .\make.ps1 reset -Force       # down -v: deletes every volume
+.\make.ps1 replay            # replayer in the background (REPLAY_SPEED 1440, CHAOS_RATE 0.02)
+.\make.ps1 replay-stop       # graceful; resumes from replay.checkpoint on the next `replay`
+.\make.ps1 replay-verify     # row counts + chaos ledger vs the checkpoint (stop it first)
 ```
+
+Replayer facts: 866,582 events for the full dataset (2016-09-03 → 2018-10-17). At 1440× that is
+about 13 h of wall time, less because quiet gaps are skipped. The chaos rate is fixed by the
+first batch (`REPLAY-CHAOS-RATE-CHANGED`). Replaying different data or another seed needs a
+fresh `source-db` volume. Host-side clients connect to `127.0.0.1`, never `localhost`
+(gotcha #27).
 
 Trino CLI inside the stack: `docker compose exec trino trino --catalog lake`.
 
