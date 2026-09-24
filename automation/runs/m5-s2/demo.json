@@ -1,0 +1,137 @@
+{
+  "started_at": "2026-09-24T17:40:49+00:00",
+  "timings": {
+    "replay_min": 2.5,
+    "bronze_drain_min": 1.0,
+    "fx_min": 0.1,
+    "lakehouse_build_min": 2.0
+  },
+  "checked_at": "2026-09-24T17:46:40+00:00",
+  "checks": {
+    "services": {
+      "ok": true,
+      "services": 25,
+      "problems": []
+    },
+    "replay": {
+      "ok": true,
+      "events_applied": 866582,
+      "events_total": 866582,
+      "click_orders_done": 99441,
+      "orders": 99441
+    },
+    "bronze": {
+      "ok": true,
+      "partitions": 30,
+      "kafka_offsets": 2088157,
+      "landed_rows": 2088157,
+      "distinct_offsets": 2088157
+    },
+    "quarantine": {
+      "ok": true,
+      "rules": {
+        "negative_price": {
+          "quarantined": 2320,
+          "ledger": 2320
+        },
+        "null_customer_id": {
+          "quarantined": 1955,
+          "ledger": 1955
+        },
+        "unknown_status": {
+          "quarantined": 4870,
+          "ledger": 4870
+        },
+        "approved_before_purchase": {
+          "quarantined": 979,
+          "ledger": 979
+        },
+        "missing_event_type": {
+          "quarantined": 6506,
+          "ledger": 6506
+        },
+        "null_product": {
+          "quarantined": 5032,
+          "ledger": 5032
+        }
+      }
+    },
+    "gate_vs_gx": {
+      "ok": true,
+      "batch_rules": 34,
+      "disagreements": 0
+    },
+    "silver": {
+      "ok": true,
+      "tables_matching": 9,
+      "tables": 9,
+      "rows_matched": 559365,
+      "chaos_excluded_keys": 9901,
+      "failing_tables": [],
+      "clickstream": {
+        "bronze_rows": 1209529,
+        "bronze_distinct_event_ids": 1203034,
+        "duplicates_removed": 6495,
+        "silver_events": 1203034,
+        "silver_distinct_event_ids": 1203034,
+        "sessions": 298370,
+        "ok": true
+      }
+    },
+    "gold": {
+      "ok": true,
+      "payments_brl_csv": "16008872.12",
+      "payments_brl_gold": "16008872.12",
+      "orders": 99441,
+      "orders_without_fx": 0
+    },
+    "airflow": {
+      "ok": true,
+      "last_run": "manual__2026-09-24T17:44:28.069189+00:00",
+      "state": "success",
+      "tasks": {
+        "dbt_gold": [
+          "success",
+          1
+        ],
+        "dbt_silver": [
+          "success",
+          1
+        ],
+        "gx_bronze_checkpoint": [
+          "success",
+          1
+        ],
+        "iceberg_maintenance": [
+          "success",
+          1
+        ]
+      }
+    },
+    "superset": {
+      "ok": true,
+      "dashboards": {
+        "Stream health": {
+          "Gate vs Great Expectations": 6,
+          "Duplicates and late events (measured, handled in silver)": 2,
+          "Quarantined rows by rule": 6
+        },
+        "Revenue": {
+          "Revenue per month (BRL and USD)": 25,
+          "Total revenue (USD)": 1,
+          "Orders per month": 25
+        },
+        "Funnel": {
+          "Sessions and conversions per week": 100,
+          "Funnel stages (all weeks)": 1,
+          "Overall conversion rate": 1
+        },
+        "Delivery SLA": {
+          "Late deliveries per month": 23,
+          "Average delivery days by customer state": 27
+        }
+      }
+    }
+  },
+  "verdict": "pass"
+}
