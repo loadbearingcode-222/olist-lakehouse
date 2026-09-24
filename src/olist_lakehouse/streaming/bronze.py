@@ -132,6 +132,8 @@ def kafka_frame(spark: SparkSession, **subscription: str) -> DataFrame:
         .option("kafka.bootstrap.servers", KAFKA)
         .option("startingOffsets", "earliest")
         .option("maxOffsetsPerTrigger", MAX_OFFSETS)
+        # A new CDC topic (a new table) is discovered within 30 s rather than the default 5 min.
+        .option("kafka.metadata.max.age.ms", "30000")
         .options(**subscription)
         .load()
         .select(

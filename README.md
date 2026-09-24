@@ -12,14 +12,15 @@ Olist CSVs ─► replayer ─► Postgres ─► Debezium ─► Kafka ─► S
              Superset ◄─ Trino ◄─ dbt gold ◄─ dbt silver ◄── Airflow 3 (FX · GX · dbt · maintenance)
 ```
 
-**Status:** M0 (foundations) and M1 (source and CDC) are done:
+**Status:** M0 (foundations), M1 (source and CDC) and M2 (streaming bronze) are done:
 - Olist replays into Postgres as a live app on a compressed clock.
-- Every change streams through Debezium into Kafka.
-- A matching web clickstream flows into `clickstream.events`, with a 2% chaos rate for the
-  quality gate to catch.
+- Every change streams through Debezium into Kafka, alongside a matching web clickstream.
+- Spark lands every message in Iceberg bronze exactly once.
+- A quality gate quarantines bad rows by name and reconciles them 1:1 with the injected chaos.
+- Failure drills (kill Connect, kill Spark, restart Kafka) show zero loss.
 
-Next is M2 (Spark Structured Streaming into Iceberg bronze). The plan, in the order it merges,
-is in [docs/MILESTONES.md](docs/MILESTONES.md).
+Next is M3 (dbt silver and gold). The plan, in the order it merges, is in
+[docs/MILESTONES.md](docs/MILESTONES.md).
 
 ## Quickstart (Windows, Docker Desktop, uv, Kaggle CLI configured)
 
@@ -28,7 +29,9 @@ is in [docs/MILESTONES.md](docs/MILESTONES.md).
 .\make.ps1 fetch              # Olist CSVs from Kaggle, verified against data/olist.sha256
 .\make.ps1 up                 # generates .env, runs the preflight, starts the stack
 .\make.ps1 replay             # replayer + clickstream producer (REPLAY_SPEED, CHAOS_RATE)
-.\make.ps1 test-integration   # lake round trip, replayer, CDC completeness, clickstream
+.\make.ps1 test-integration   # lake round trip, replayer, CDC, clickstream, bronze, gate
+.\make.ps1 gate-redteam       # plant one defect per quality rule; each must be refused by name
+.\make.ps1 drills             # kill Connect / kill Spark / restart Kafka; zero loss
 ```
 
 | Service | URL |
@@ -37,9 +40,12 @@ is in [docs/MILESTONES.md](docs/MILESTONES.md).
 | Lakekeeper UI | http://localhost:28181/ui |
 | MinIO console | http://localhost:29001 |
 | Kafka (Redpanda Console) | http://localhost:28080 |
+| Spark (Structured Streaming) | http://localhost:24040 |
 | Postgres (the Olist app) | 127.0.0.1:25432, db `olist` |
 
-Decisions are in [docs/adr/](docs/adr/) and known traps in [docs/gotchas.md](docs/gotchas.md).
+Operating the platform: [docs/RUNBOOK.md](docs/RUNBOOK.md) and
+[docs/FAILURE_DRILLS.md](docs/FAILURE_DRILLS.md). Decisions are in [docs/adr/](docs/adr/) and
+known traps in [docs/gotchas.md](docs/gotchas.md).
 
 ## Data
 

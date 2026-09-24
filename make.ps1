@@ -100,7 +100,8 @@ switch ($Target.ToLowerInvariant()) {
             @('replay-status', 'Where the replay and the clickstream are'),
             @('replay-verify', 'Row counts + chaos ledger match the checkpoint?'),
             @('bronze-logs',   'Tail the bronze streaming job (Spark UI: http://localhost:24040)'),
-            @('gate-redteam',  'Plant one defect per quality rule in a throwaway Spark; each must be refused')
+            @('gate-redteam',  'Plant one defect per quality rule in a throwaway Spark; each must be refused'),
+            @('drills',        'Failure drills: kill Connect, kill Spark, restart Kafka (evidence -> automation/runs/m2-s3)')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
     }
@@ -143,6 +144,10 @@ switch ($Target.ToLowerInvariant()) {
     'replay-verify' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--verify') }
     'bronze-logs'   { Invoke-Compose @('logs', '-f', '--tail=50', 'bronze-stream') }
     'gate-redteam'  { Invoke-Compose @('run', '--rm', '--no-deps', 'bronze-stream', '/opt/spark/bin/spark-submit', '/opt/app/src/olist_lakehouse/quality/redteam.py') }
+    'drills'        {
+        $env:OLIST_STACK_REQUIRED = '1'
+        Invoke-Uv @('run', '--group', 'integration', 'pytest', 'tests/integration/test_drills.py', '-s')
+    }
     'check'     {
         & $PSCommandPath sync
         & $PSCommandPath lint

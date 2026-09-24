@@ -1,0 +1,18 @@
+{
+  "drill": "restart-broker",
+  "run_id": "restart-broker-1790262770",
+  "started_at": "2026-09-24T15:12:50+00:00",
+  "finished_at": "2026-09-24T15:14:05+00:00",
+  "heartbeats_written": 927,
+  "heartbeat_write_errors": 0,
+  "heartbeat_events_in_bronze": 927,
+  "heartbeat_rows_in_bronze": 927,
+  "redelivered_by_kafka": 0,
+  "kafka_offsets_total": 2091192,
+  "landed_rows_total": 2091192,
+  "landed_distinct_offsets": 2091192,
+  "seconds_from_fault_to_recovered": 54.6,
+  "lost_events": 0,
+  "offsets_landed_twice": 0,
+  "verdict": "pass"
+}
