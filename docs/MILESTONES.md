@@ -84,7 +84,8 @@ olist-lakehouse/
    ├─ adr/                                              M0-S1  one file per decision
    ├─ data/olist.md                                     M0-S2  dictionary · CC BY-NC-SA attribution · event vs processing time
    ├─ RUNBOOK.md · FAILURE_DRILLS.md                    M2-S3
-   └─ architecture.md                                   M5-S2  mermaid diagram · screenshots
+   ├─ architecture.md                                   M5-S2  mermaid diagram · screenshots
+   └─ img/                                              M5-S2  screenshots of the demo stack (PNG)
 ```
 
 **Never in the repo:**

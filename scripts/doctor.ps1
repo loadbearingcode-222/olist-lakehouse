@@ -5,6 +5,7 @@
 #   DOCTOR-NO-DOCKER     the Docker daemon is not answering
 #   DOCTOR-PORT-FOREIGN  a port this project claims is held by something that is not ours
 #   DOCTOR-RAM-SHORT     Docker memory minus what foreign containers use is below our budget
+#   DOCTOR-PATH-LONG     the repo path is so long that .venv DLLs pass MAX_PATH (gotcha #41)
 #
 # A port held by THIS project's own container is fine (the stack is already up), so the holder
 # is resolved rather than just "is the port busy?". Keep this file ASCII-only (PowerShell 5.1).
@@ -46,6 +47,14 @@ function ConvertTo-Bytes {
                 'GiB' = 1GB; 'GB' = 1000000000; 'TiB' = 1TB }
     if (-not $scale.ContainsKey($unit)) { return 0 }
     return $n * $scale[$unit]
+}
+
+# 0. Path -----------------------------------------------------------------------------------
+# confluent-kafka's DLLs sit about 100 characters below the repo root (.venv\Lib\site-packages\n# confluent_kafka.libs\libcrypto-3-x64-<hash>.dll), and Windows refuses to load a DLL whose
+# path reaches MAX_PATH (260). 120 leaves a margin for longer wheel names.
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if ($repoRoot.Length -gt 120) {
+    $refusals.Add("DOCTOR-PATH-LONG: the repo path is $($repoRoot.Length) characters (max 120); clone it somewhere shorter")
 }
 
 # 1. Docker ---------------------------------------------------------------------------------
