@@ -11,3 +11,5 @@ sources:
         description: One row per Kafka message from olist.olist.* (raw Debezium JSON).
       - name: clickstream_events
         description: One row per Kafka message from clickstream.events.
+      - name: fx_rates
+        description: ECB reference rates per business day, loaded by olist_lakehouse.fx (M3-S2).

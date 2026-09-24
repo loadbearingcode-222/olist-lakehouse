@@ -63,7 +63,7 @@ olist-lakehouse/
 │  ├─ package-lock.yml                                  M3-S1  dbt deps, pinned
 │  ├─ macros/ · tests/                                  M3-S1  CDC merge macros · singular data tests
 │  ├─ models/staging/ · models/silver/                  M3-S1
-│  └─ snapshots/ · models/gold/                         M3-S2
+│  └─ models/gold/                                      M3-S2  star schema; SCD2 from the CDC log (ADR-0006)
 ├─ airflow/dags/                                        M4-S1  fx_rates_daily (S1) · lakehouse_build (S2)
 ├─ superset/dashboards/                                 M5-S1  exported YAML, imported on `up`
 ├─ data/olist.sha256                                    M0-S2  manifest only
@@ -184,7 +184,7 @@ Accept when:
 - [ ] Clickstream events are deduplicated by `event_id` and sessionized.
 - [ ] dbt tests are green.
 
-### M3-S2: SCD2 snapshots, FX and gold star schema
+### M3-S2: SCD2 history, FX and gold star schema
 Branch `feat/m3-s2-gold-star` · Role: data engineer · **Release `v0.3.0`**
 
 Accept when:

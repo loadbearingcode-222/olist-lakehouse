@@ -105,6 +105,7 @@ switch ($Target.ToLowerInvariant()) {
             @('bronze-logs',   'Tail the bronze streaming job (Spark UI: http://localhost:24040)'),
             @('gate-redteam',  'Plant one defect per quality rule in a throwaway Spark; each must be refused'),
             @('dbt',           'Run dbt against the lake, e.g. .\make.ps1 dbt build (host -> Trino 127.0.0.1:28090)'),
+            @('fx',            'Load BRL->USD ECB rates into bronze: -Rest 2016-08-25,2018-10-31 (default range)'),
             @('reconcile',     'Silver vs Postgres, every live row and column (chaos keys counted, not hidden)'),
             @('drills',        'Failure drills: kill Connect, kill Spark, restart Kafka (evidence -> automation/runs/m2-s3)')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
@@ -153,6 +154,10 @@ switch ($Target.ToLowerInvariant()) {
         $env:DBT_PROJECT_DIR = Join-Path $PSScriptRoot 'dbt\olist'
         $env:DBT_PROFILES_DIR = $env:DBT_PROJECT_DIR
         Invoke-Uv (@('run', '--group', 'dbt', 'dbt') + $Rest)
+    }
+    'fx'            {
+        $range = if ($Rest.Count -ge 2) { $Rest } else { @('2016-08-25', '2018-10-31') }
+        Invoke-Uv @('run', '--group', 'integration', 'python', '-m', 'olist_lakehouse.fx', '--start', $range[0], '--end', $range[1])
     }
     'reconcile'     { Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/reconcile.py', '--write') }
     'drills'        {

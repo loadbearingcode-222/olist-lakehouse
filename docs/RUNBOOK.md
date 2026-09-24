@@ -71,6 +71,15 @@ the two implementations is wrong. Read `GX could not evaluate` lines first (gotc
 compare the rule's predicate in `quality/rules.py` with its expectation in `expect.py`.
 `.\make.ps1 gate-redteam` re-checks every rule on planted rows.
 
+## dbt (silver and gold)
+
+- `.\make.ps1 dbt build` runs everything: silver merges incrementally and gold is rebuilt.
+  One WARN is expected: `orders_without_dq_issues` counts flagged orders (ADR-0005).
+- **"source and target schemas are out of sync"** on an incremental model means its columns
+  changed. If the change came from a shared macro, full-refresh **every** model using it:
+  `.\make.ps1 dbt run --full-refresh --select <models>` (gotcha #35).
+- After any silver change: `.\make.ps1 reconcile` (silver vs Postgres, row by row).
+
 ## Replayer and clickstream
 
 - `REPLAY-FINGERPRINT-MISMATCH`: the source DB was replayed from other data, seed or rates.

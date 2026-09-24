@@ -12,14 +12,17 @@ Olist CSVs ─► replayer ─► Postgres ─► Debezium ─► Kafka ─► S
              Superset ◄─ Trino ◄─ dbt gold ◄─ dbt silver ◄── Airflow 3 (FX · GX · dbt · maintenance)
 ```
 
-**Status:** M0 (foundations), M1 (source and CDC) and M2 (streaming bronze) are done:
+**Status:** M0 to M3 are done (foundations, source and CDC, streaming bronze, dbt modelling):
 - Olist replays into Postgres as a live app on a compressed clock.
 - Every change streams through Debezium into Kafka, alongside a matching web clickstream.
 - Spark lands every message in Iceberg bronze exactly once.
 - A quality gate quarantines bad rows by name and reconciles them 1:1 with the injected chaos.
 - Failure drills (kill Connect, kill Spark, restart Kafka) show zero loss.
+- dbt on Trino builds silver (current state from CDC, equal to Postgres row by row) and a gold
+  star schema: SCD2 sellers and products from the change log, BRL and USD at the ECB rate of
+  the purchase day, and enforced contracts. Payments reconcile with the source CSV to the cent.
 
-Next is M3 (dbt silver and gold). The plan, in the order it merges, is in
+Next is M4 (Airflow 3 orchestration). The plan, in the order it merges, is in
 [docs/MILESTONES.md](docs/MILESTONES.md).
 
 ## Quickstart (Windows, Docker Desktop, uv, Kaggle CLI configured)
@@ -32,6 +35,9 @@ Next is M3 (dbt silver and gold). The plan, in the order it merges, is in
 .\make.ps1 test-integration   # lake round trip, replayer, CDC, clickstream, bronze, gate
 .\make.ps1 gate-redteam       # plant one defect per quality rule; each must be refused by name
 .\make.ps1 drills             # kill Connect / kill Spark / restart Kafka; zero loss
+.\make.ps1 fx                 # ECB BRL->USD rates into bronze
+.\make.ps1 dbt build          # silver + gold, with tests
+.\make.ps1 reconcile          # silver vs Postgres, every row and column
 ```
 
 | Service | URL |

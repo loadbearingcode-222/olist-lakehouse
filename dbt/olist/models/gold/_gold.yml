@@ -1,0 +1,153 @@
+version: 2
+
+# Gold: the star schema. Contracts are enforced: every column and type below is what the
+# table is built with, and a model whose SQL disagrees fails before anything is written.
+
+models:
+  - name: dim_date
+    columns:
+      - {name: date_key, data_type: integer, data_tests: [unique, not_null]}
+      - {name: date, data_type: date}
+      - {name: year, data_type: integer}
+      - {name: quarter, data_type: integer}
+      - {name: month, data_type: integer}
+      - {name: month_name, data_type: varchar}
+      - {name: iso_week, data_type: integer}
+      - {name: day_of_week, data_type: integer}
+      - {name: day_name, data_type: varchar}
+      - {name: is_weekend, data_type: boolean}
+
+  - name: dim_customer
+    description: One row per person (customer_unique_id), located by their latest order.
+    columns:
+      - {name: customer_unique_id, data_type: varchar, data_tests: [unique, not_null]}
+      - {name: zip_code_prefix, data_type: varchar}
+      - {name: city, data_type: varchar}
+      - {name: state, data_type: varchar}
+      - {name: lat, data_type: double}
+      - {name: lng, data_type: double}
+      - {name: first_purchase_ts, data_type: timestamp(6)}
+      - {name: orders, data_type: integer}
+
+  - name: dim_seller
+    description: Sellers with history (SCD2 from the CDC log); one row per version.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [seller_id, version]}
+      - dbt_utils.expression_is_true:
+          arguments: {expression: "valid_from < valid_to"}
+    columns:
+      - {name: seller_sk, data_type: varchar, data_tests: [unique, not_null]}
+      - {name: seller_id, data_type: varchar, data_tests: [not_null]}
+      - {name: version, data_type: integer}
+      - {name: zip_code_prefix, data_type: varchar}
+      - {name: city, data_type: varchar}
+      - {name: state, data_type: varchar}
+      - {name: lat, data_type: double}
+      - {name: lng, data_type: double}
+      - {name: valid_from, data_type: timestamp(6)}
+      - {name: valid_to, data_type: timestamp(6)}
+      - {name: is_current, data_type: boolean}
+
+  - name: dim_product
+    description: Products with history (SCD2 from the CDC log); one row per version.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [product_id, version]}
+      - dbt_utils.expression_is_true:
+          arguments: {expression: "valid_from < valid_to"}
+    columns:
+      - {name: product_sk, data_type: varchar, data_tests: [unique, not_null]}
+      - {name: product_id, data_type: varchar, data_tests: [not_null]}
+      - {name: version, data_type: integer}
+      - {name: category_name, data_type: varchar}
+      - {name: category_name_english, data_type: varchar}
+      - {name: product_weight_g, data_type: integer}
+      - {name: product_length_cm, data_type: integer}
+      - {name: product_height_cm, data_type: integer}
+      - {name: product_width_cm, data_type: integer}
+      - {name: product_photos_qty, data_type: integer}
+      - {name: valid_from, data_type: timestamp(6)}
+      - {name: valid_to, data_type: timestamp(6)}
+      - {name: is_current, data_type: boolean}
+
+  - name: fct_orders
+    description: One row per order. is_trusted = false when silver flagged the order.
+    columns:
+      - {name: order_id, data_type: varchar, data_tests: [unique, not_null]}
+      - name: customer_unique_id
+        data_type: varchar
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_customer'), field: customer_unique_id}
+      - {name: order_status, data_type: varchar, data_tests: [not_null]}
+      - {name: purchase_ts, data_type: timestamp(6), data_tests: [not_null]}
+      - name: purchase_date_key
+        data_type: integer
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_date'), field: date_key}
+      - {name: approved_at, data_type: timestamp(6)}
+      - {name: delivered_carrier_at, data_type: timestamp(6)}
+      - {name: delivered_customer_at, data_type: timestamp(6)}
+      - {name: estimated_delivery_at, data_type: timestamp(6)}
+      - {name: delivery_days, data_type: double}
+      - {name: is_delivered_late, data_type: boolean}
+      - {name: items, data_type: integer}
+      - {name: items_value_brl, data_type: "decimal(14,2)"}
+      - {name: freight_value_brl, data_type: "decimal(14,2)"}
+      - {name: payment_value_brl, data_type: "decimal(14,2)"}
+      - {name: fx_brl_usd, data_type: "decimal(18,10)", data_tests: [not_null]}
+      - {name: payment_value_usd, data_type: "decimal(14,2)", data_tests: [not_null]}
+      - {name: review_score, data_type: double}
+      - {name: dq_issues, data_type: array(varchar)}
+      - {name: is_trusted, data_type: boolean, data_tests: [not_null]}
+
+  - name: fct_order_items
+    description: One row per order line; seller and product as of the purchase.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [order_id, order_item_id]}
+    columns:
+      - {name: order_id, data_type: varchar, data_tests: [not_null]}
+      - {name: order_item_id, data_type: integer}
+      - {name: purchase_ts, data_type: timestamp(6)}
+      - {name: purchase_date_key, data_type: integer}
+      - {name: customer_unique_id, data_type: varchar}
+      - name: seller_sk
+        data_type: varchar
+        description: The seller version valid at purchase time. Never null (as-of join complete).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_seller'), field: seller_sk}
+      - {name: seller_id, data_type: varchar}
+      - name: product_sk
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_product'), field: product_sk}
+      - {name: product_id, data_type: varchar}
+      - {name: order_status, data_type: varchar}
+      - {name: price_brl, data_type: "decimal(12,2)"}
+      - {name: freight_value_brl, data_type: "decimal(12,2)"}
+      - {name: fx_brl_usd, data_type: "decimal(18,10)", data_tests: [not_null]}
+      - {name: price_usd, data_type: "decimal(12,2)"}
+      - {name: freight_value_usd, data_type: "decimal(12,2)"}
+      - {name: is_trusted, data_type: boolean}
+
+  - name: fct_payments
+    description: One row per payment; SUM(payment_value_brl) reconciles with the source CSV.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [order_id, payment_sequential]}
+    columns:
+      - {name: order_id, data_type: varchar, data_tests: [not_null]}
+      - {name: payment_sequential, data_type: integer}
+      - {name: payment_type, data_type: varchar}
+      - {name: payment_installments, data_type: integer}
+      - {name: purchase_date_key, data_type: integer}
+      - {name: payment_value_brl, data_type: "decimal(12,2)"}
+      - {name: fx_brl_usd, data_type: "decimal(18,10)", data_tests: [not_null]}
+      - {name: payment_value_usd, data_type: "decimal(12,2)"}

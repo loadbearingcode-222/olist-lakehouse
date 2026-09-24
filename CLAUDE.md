@@ -129,6 +129,13 @@ project in `dbt/olist`). The tables are `lake.silver.*`: current state per key, 
 Filter `NOT _is_deleted`. `.\make.ps1 reconcile` compares silver with Postgres, row by row.
 Vars `bronze_schema`/`silver_schema` let tests use fixture schemas (test_silver_cdc.py).
 
+Gold (ADR-0006): `lake.gold.*` star schema with enforced contracts. Dimensions are
+dim_date, dim_customer (one row per person), and dim_seller / dim_product (SCD2 from the
+CDC log). Facts are fct_orders, fct_order_items (as-of seller/product) and fct_payments
+(reconciles with the CSV). FX: `.\make.ps1 fx` → `bronze.fx_rates` (ECB via
+api.frankfurter.dev/v1), then `silver.fx_brl_usd_daily`. `is_trusted` marks flagged orders.
+Cast decimal aggregates before multiplying (gotcha #34).
+
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
 
