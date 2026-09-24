@@ -21,4 +21,14 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA olist GRANT SELECT ON TABLES TO debezium;
 SELECT 'CREATE PUBLICATION olist_cdc FOR TABLES IN SCHEMA olist'
 WHERE NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'olist_cdc') \gexec
 
-SELECT 'cdc-setup: role debezium and publication olist_cdc ready' AS status;
+-- Ops table for failure drills (tests/integration/test_drills.py). It lives in schema olist so
+-- the publication (FOR TABLES IN SCHEMA) and the connector carry it with no extra config. The
+-- replayer never writes it, its verify never counts it, and silver never reads it.
+CREATE TABLE IF NOT EXISTS olist.drill_heartbeat (
+    drill       text        NOT NULL,
+    seq         integer     NOT NULL,
+    written_at  timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (drill, seq)
+);
+
+SELECT 'cdc-setup: role debezium, publication olist_cdc and drill table ready' AS status;

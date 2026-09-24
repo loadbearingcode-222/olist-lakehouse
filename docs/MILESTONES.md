@@ -73,7 +73,7 @@ olist-lakehouse/
 │  ├─ doctor.ps1                                        M0-S3  port holders · Docker RAM · foreign stacks
 │  ├─ reconcile.py                                      M3-S1  Postgres ↔ silver ↔ CSV
 │  └─ demo_acceptance.py                                M5-S2  end-to-end gate → automation/runs/
-├─ automation/runs/                                     M2-S3  evidence JSON, tracked
+├─ automation/runs/                                     M2-S3  evidence JSON, tracked (m2-s3/: failure drills)
 └─ docs/
    ├─ MILESTONES.md                                     M0-S1  this file (CI parses it)
    ├─ gotchas.md                                        M0-S1  seeded from GOTCHA_SEED.md

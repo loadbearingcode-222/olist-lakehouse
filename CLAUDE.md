@@ -120,6 +120,9 @@ bronze table OR `lake.bronze.quarantine` (with the rule). Per-batch gate-vs-GX c
 one defect per rule in a throwaway Spark container. GX state is process-global: one lock
 (gotcha #30). Great Expectations 1.23.1 is in the `quality` dependency group.
 
+Operations: `docs/RUNBOOK.md`. Drills: `.\make.ps1 drills` (heartbeat rows in
+`olist.drill_heartbeat`; evidence in `automation/runs/m2-s3/`; docs/FAILURE_DRILLS.md).
+
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
 

@@ -1,0 +1,18 @@
+{
+  "drill": "kill-connect",
+  "run_id": "kill-connect-1790262584",
+  "started_at": "2026-09-24T15:09:44+00:00",
+  "finished_at": "2026-09-24T15:11:29+00:00",
+  "heartbeats_written": 1428,
+  "heartbeat_write_errors": 0,
+  "heartbeat_events_in_bronze": 1428,
+  "heartbeat_rows_in_bronze": 1789,
+  "redelivered_by_kafka": 361,
+  "kafka_offsets_total": 2089235,
+  "landed_rows_total": 2089235,
+  "landed_distinct_offsets": 2089235,
+  "seconds_from_fault_to_recovered": 84.8,
+  "lost_events": 0,
+  "offsets_landed_twice": 0,
+  "verdict": "pass"
+}
