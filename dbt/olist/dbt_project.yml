@@ -1,0 +1,32 @@
+name: olist
+version: "1.0.0"
+config-version: 2
+profile: olist
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+clean-targets: ["target", "dbt_packages"]
+
+flags:
+  send_anonymous_usage_stats: false
+
+models:
+  olist:
+    # Staging parses bronze envelopes once; it is inlined into silver (no views in the lake).
+    staging:
+      +materialized: ephemeral
+    # Silver: current state per key, merged incrementally and guarded by source LSN (ADR-0005).
+    silver:
+      +schema: "{{ var('silver_schema', 'silver') }}"  # a var so tests can use a fixture schema
+      +materialized: incremental
+      +incremental_strategy: merge
+      +on_schema_change: fail
+
+vars:
+  # Re-read this much bronze behind the last merged batch on every incremental run. Rows are
+  # deduplicated and LSN-guarded, so the overlap only costs a little reading.
+  lookback_minutes: 30
+  # A clickstream event more than this far before its session's latest event is late.
+  late_after_hours: 2

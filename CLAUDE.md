@@ -123,6 +123,12 @@ one defect per rule in a throwaway Spark container. GX state is process-global: 
 Operations: `docs/RUNBOOK.md`. Drills: `.\make.ps1 drills` (heartbeat rows in
 `olist.drill_heartbeat`; evidence in `automation/runs/m2-s3/`; docs/FAILURE_DRILLS.md).
 
+Silver (ADR-0005): `.\make.ps1 dbt build` (host dbt 1.12.5 + dbt-trino 1.10.5, `dbt` group;
+project in `dbt/olist`). The tables are `lake.silver.*`: current state per key, with
+`_is_deleted`, `_source_lsn` and `_dq_issues`; plus `click_events` and `click_sessions`.
+Filter `NOT _is_deleted`. `.\make.ps1 reconcile` compares silver with Postgres, row by row.
+Vars `bronze_schema`/`silver_schema` let tests use fixture schemas (test_silver_cdc.py).
+
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
 

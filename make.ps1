@@ -10,6 +10,9 @@
 param(
     [Parameter(Position = 0)]
     [string]$Target = 'help',
+    # Only for `dbt`: everything after the target is passed to dbt, e.g. .\make.ps1 dbt build
+    [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
+    [string[]]$Rest = @(),
     # Only for `reset`: confirms that the named volumes (all lake data) may be deleted.
     [switch]$Force
 )
@@ -101,6 +104,8 @@ switch ($Target.ToLowerInvariant()) {
             @('replay-verify', 'Row counts + chaos ledger match the checkpoint?'),
             @('bronze-logs',   'Tail the bronze streaming job (Spark UI: http://localhost:24040)'),
             @('gate-redteam',  'Plant one defect per quality rule in a throwaway Spark; each must be refused'),
+            @('dbt',           'Run dbt against the lake, e.g. .\make.ps1 dbt build (host -> Trino 127.0.0.1:28090)'),
+            @('reconcile',     'Silver vs Postgres, every live row and column (chaos keys counted, not hidden)'),
             @('drills',        'Failure drills: kill Connect, kill Spark, restart Kafka (evidence -> automation/runs/m2-s3)')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
@@ -144,6 +149,12 @@ switch ($Target.ToLowerInvariant()) {
     'replay-verify' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--verify') }
     'bronze-logs'   { Invoke-Compose @('logs', '-f', '--tail=50', 'bronze-stream') }
     'gate-redteam'  { Invoke-Compose @('run', '--rm', '--no-deps', 'bronze-stream', '/opt/spark/bin/spark-submit', '/opt/app/src/olist_lakehouse/quality/redteam.py') }
+    'dbt'           {
+        $env:DBT_PROJECT_DIR = Join-Path $PSScriptRoot 'dbt\olist'
+        $env:DBT_PROFILES_DIR = $env:DBT_PROJECT_DIR
+        Invoke-Uv (@('run', '--group', 'dbt', 'dbt') + $Rest)
+    }
+    'reconcile'     { Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/reconcile.py', '--write') }
     'drills'        {
         $env:OLIST_STACK_REQUIRED = '1'
         Invoke-Uv @('run', '--group', 'integration', 'pytest', 'tests/integration/test_drills.py', '-s')

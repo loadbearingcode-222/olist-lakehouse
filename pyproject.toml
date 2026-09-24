@@ -21,6 +21,11 @@ dev = [
 quality = [
     "great-expectations>=1.23,<2",
 ]
+# Transformations (M3): dbt on Trino. Run with `.\make.ps1 dbt <args>`.
+dbt = [
+    "dbt-core>=1.12,<1.13",
+    "dbt-trino>=1.10,<1.11",
+]
 # Talks to the running stack (.\make.ps1 test-integration); CI does not install it.
 integration = [
     "trino>=0.333",
@@ -58,7 +63,7 @@ known-first-party = ["olist_lakehouse", "story_lint", "layout_lint"]
 # ---------------------------------------------------------------- mypy
 [tool.mypy]
 python_version = "3.12"
-files = ["src", ".github/scripts", "tests"]
+files = ["src", ".github/scripts", "scripts", "tests"]
 mypy_path = ".github/scripts"
 strict = true
 warn_unreachable = true

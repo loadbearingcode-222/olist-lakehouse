@@ -1,0 +1,134 @@
+version: 2
+
+# Silver = current state per key (CDC tables) and deduplicated events (clickstream).
+# Rows deleted in the source are kept with _is_deleted = true; filter them for "current".
+
+models:
+  - name: orders
+    data_tests:
+      - dbt_utils.expression_is_true:
+          name: orders_without_dq_issues
+          arguments:
+            expression: "cardinality(_dq_issues) = 0"
+          config:
+            severity: warn   # flagged, not failed: silver mirrors the source; gold decides (ADR-0005)
+    columns:
+      - name: order_id
+        data_tests: [not_null, unique]
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [approved, canceled, created, delivered, invoiced, processing, shipped, unavailable]
+      - name: purchase_ts
+        data_tests: [not_null]
+      - name: _is_deleted
+        description: True when the latest change for the key was a delete.
+        data_tests: [not_null]
+      - name: _source_lsn
+        description: WAL position of the change the row reflects; merges only move it forward.
+        data_tests: [not_null]
+
+  - name: order_items
+    data_tests:
+      - dbt_utils.expression_is_true:
+          name: order_items_without_dq_issues
+          arguments:
+            expression: "cardinality(_dq_issues) = 0"
+          config:
+            severity: warn   # flagged, not failed: silver mirrors the source; gold decides (ADR-0005)
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "order_id is not null"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "order_item_id is not null"
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, order_item_id]
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "price >= 0"
+    columns:
+      - name: order_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('orders')
+                field: order_id
+              config:
+                severity: warn   # an order whose only change was quarantined is legitimately absent
+
+  - name: order_payments
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "order_id is not null"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "payment_sequential is not null"
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, payment_sequential]
+
+  - name: order_reviews
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "review_id is not null"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "order_id is not null"
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [review_id, order_id]
+    columns:
+      - name: review_score
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+
+  - name: customers
+    columns:
+      - name: customer_id
+        data_tests: [not_null, unique]
+
+  - name: sellers
+    columns:
+      - name: seller_id
+        data_tests: [not_null, unique]
+
+  - name: products
+    columns:
+      - name: product_id
+        data_tests: [not_null, unique]
+
+  - name: product_category_translation
+    columns:
+      - name: category_name
+        data_tests: [not_null, unique]
+
+  - name: zip_geolocation
+    columns:
+      - name: zip_code_prefix
+        data_tests: [not_null, unique]
+
+  - name: click_events
+    columns:
+      - name: event_id
+        data_tests: [not_null, unique]
+      - name: session_id
+        data_tests: [not_null]
+      - name: event_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view, add_to_cart, checkout, purchase]
+
+  - name: click_sessions
+    columns:
+      - name: session_id
+        data_tests: [not_null, unique]
