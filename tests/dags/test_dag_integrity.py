@@ -46,6 +46,15 @@ def test_fx_rates_daily_is_an_interval_dag_that_never_catches_up_by_accident(bag
     assert dag.tasks[0].pool == "fx_rates_writer"  # one Iceberg writer at a time
 
 
+def test_lakehouse_build_checks_bronze_before_building_anything(bag: DagBag) -> None:
+    dag = bag.dags["lakehouse_build"]
+    order = [t.task_id for t in dag.topological_sort()]
+    assert order == ["gx_bronze_checkpoint", "dbt_silver", "dbt_gold", "iceberg_maintenance"]
+    assert dag.max_active_runs == 1  # one dbt build at a time
+    assert dag.get_task("gx_bronze_checkpoint").retries == 0  # a verdict is not retried
+    assert dag.catchup is False
+
+
 def test_no_template_is_spliced_into_shell_text(bag: DagBag) -> None:
     """Run parameters reach bash through env vars (gotcha #7), never inside the command."""
     for dag in ours(bag).values():

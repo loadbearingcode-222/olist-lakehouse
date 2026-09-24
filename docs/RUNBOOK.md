@@ -93,6 +93,15 @@ adds nothing if the rate is already stored (MERGE on the date).
 docker compose exec platform-db psql -U platform -d airflow -c "select state, count(*) from dag_run where dag_id = 'fx_rates_daily' group by 1;"
 ```
 
+**Build silver and gold on demand:** `docker compose exec airflow-scheduler airflow dags test lakehouse_build`.
+If `gx_bronze_checkpoint` fails, nothing downstream runs. Open http://localhost:28089, pick the
+newest `bronze_profile` validation, and read the failed expectation (quarantine share, a
+silent source, or gate/GX disagreement).
+
+**Trino restarted during a run** ("connection refused" in a dbt log): check
+`docker inspect olist-lakehouse-trino-1 --format '{{.RestartCount}}'`. Its heap is fixed in
+`config/trino/jvm.config`; raise `mem_limit` and `-Xmx` together, never one alone (gotcha #39).
+
 ## dbt (silver and gold)
 
 - `.\make.ps1 dbt build` runs everything: silver merges incrementally and gold is rebuilt.

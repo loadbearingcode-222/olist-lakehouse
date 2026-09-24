@@ -145,6 +145,11 @@ DAGs are in `airflow/dags` (read-only mount); tasks run `$OLIST_PYTHON` / `$OLIS
 from/to dates are data_interval_start, inclusive (wrenfield gotcha). DAG integrity runs in
 the image: `tests/dags`.
 
+`lakehouse_build` (ADR-0008) runs gx_bronze_checkpoint → dbt_silver → dbt_gold →
+iceberg_maintenance. Data Docs are at http://localhost:28089 (GX project in the `gx-data`
+volume under `gx/`). Red team: `airflow dags test lakehouse_build -c '{"plant_failure": true}'`.
+Trino's heap is fixed at 2.5 GB with a 1 GB/query cap (`config/trino/`, gotcha #39).
+
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
 

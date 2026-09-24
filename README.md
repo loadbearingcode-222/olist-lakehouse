@@ -12,7 +12,8 @@ Olist CSVs ─► replayer ─► Postgres ─► Debezium ─► Kafka ─► S
              Superset ◄─ Trino ◄─ dbt gold ◄─ dbt silver ◄── Airflow 3 (FX · GX · dbt · maintenance)
 ```
 
-**Status:** M0 to M3 are done (foundations, source and CDC, streaming bronze, dbt modelling):
+**Status:** M0 to M4 are done (foundations, source and CDC, streaming bronze, dbt modelling,
+orchestration):
 - Olist replays into Postgres as a live app on a compressed clock.
 - Every change streams through Debezium into Kafka, alongside a matching web clickstream.
 - Spark lands every message in Iceberg bronze exactly once.
@@ -22,7 +23,11 @@ Olist CSVs ─► replayer ─► Postgres ─► Debezium ─► Kafka ─► S
   star schema: SCD2 sellers and products from the change log, BRL and USD at the ECB rate of
   the purchase day, and enforced contracts. Payments reconcile with the source CSV to the cent.
 
-Next is M4 (Airflow 3 orchestration). The plan, in the order it merges, is in
+- Airflow 3 backfills ECB FX rates over the whole period. `lakehouse_build` checks bronze
+  with Great Expectations (a failed check stops dbt, and Data Docs show why), builds silver
+  and gold, and compacts Iceberg.
+
+Next is M5 (Superset dashboards and the one-command demo). The plan, in the order it merges, is in
 [docs/MILESTONES.md](docs/MILESTONES.md).
 
 ## Quickstart (Windows, Docker Desktop, uv, Kaggle CLI configured)
@@ -47,6 +52,8 @@ Next is M4 (Airflow 3 orchestration). The plan, in the order it merges, is in
 | MinIO console | http://localhost:29001 |
 | Kafka (Redpanda Console) | http://localhost:28080 |
 | Spark (Structured Streaming) | http://localhost:24040 |
+| Airflow | http://localhost:28082 (admin / `AIRFLOW_ADMIN_PASSWORD` in `.env`) |
+| Great Expectations Data Docs | http://localhost:28089 |
 | Postgres (the Olist app) | 127.0.0.1:25432, db `olist` |
 
 Operating the platform: [docs/RUNBOOK.md](docs/RUNBOOK.md) and
