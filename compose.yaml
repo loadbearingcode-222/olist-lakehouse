@@ -1,0 +1,134 @@
+# olist-lakehouse: the whole local platform. Grows story by story (docs/MILESTONES.md):
+#   M0 lake core: MinIO (S3) · platform-db (Postgres) · Lakekeeper (Iceberg REST) · Trino
+#
+# Conventions
+# - Image pins are exact and were checked live (ADR-0001, CLAUDE.md "Version pins").
+# - Host ports are the 2xxxx family on 127.0.0.1 only (CLAUDE.md fleet ledger).
+# - State lives in named volumes; only config is bind-mounted (the repo is on C:).
+# - Every long-running service has a healthcheck and a mem_limit (budget: 20 GB in total).
+# - Secrets come from .env (`.\make.ps1 env`); `:?` makes a missing one fail loudly.
+
+name: olist-lakehouse
+
+x-lakekeeper-env: &lakekeeper-env
+  LAKEKEEPER__PG_ENCRYPTION_KEY: ${LAKEKEEPER_ENCRYPTION_KEY:?run .\make.ps1 env}
+  LAKEKEEPER__PG_DATABASE_URL_READ: postgresql://platform:${PLATFORM_DB_PASSWORD:?run .\make.ps1 env}@platform-db:5432/lakekeeper
+  LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://platform:${PLATFORM_DB_PASSWORD:?run .\make.ps1 env}@platform-db:5432/lakekeeper
+
+x-minio-credentials: &minio-credentials
+  MINIO_ROOT_USER: ${MINIO_ROOT_USER:?run .\make.ps1 env}
+  MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?run .\make.ps1 env}
+
+services:
+  # ------------------------------------------------------------------ object storage
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z.hotfix.7aa24e772
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment: *minio-credentials
+    ports:
+      - "127.0.0.1:29000:9000"   # S3 API
+      - "127.0.0.1:29001:9001"   # web console
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    mem_limit: 1g
+    restart: unless-stopped
+
+  minio-init:
+    # One-shot: creates the lakehouse bucket. Idempotent, so it runs on every `up`.
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment: *minio-credentials
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null
+        mc mb --ignore-existing local/lakehouse
+    restart: "no"
+
+  # ------------------------------------------------------------------ platform database
+  platform-db:
+    # Metadata for platform services (Lakekeeper now; Airflow and Superset later), one database
+    # each. Not published to the host: nothing outside the network needs it.
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD:?run .\make.ps1 env}
+      POSTGRES_DB: lakekeeper
+    volumes:
+      - platform-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d lakekeeper"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    mem_limit: 512m
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------ Iceberg REST catalog
+  lakekeeper-migrate:
+    image: quay.io/lakekeeper/catalog:v0.13.6
+    command: ["migrate"]
+    environment: *lakekeeper-env
+    depends_on:
+      platform-db:
+        condition: service_healthy
+    restart: "no"
+
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog:v0.13.6
+    command: ["serve"]
+    environment: *lakekeeper-env
+    depends_on:
+      lakekeeper-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:28181:8181"
+    healthcheck:
+      test: ["CMD", "/home/nonroot/lakekeeper", "healthcheck", "-a"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    mem_limit: 512m
+    restart: unless-stopped
+
+  lakekeeper-bootstrap:
+    # One-shot: accepts the terms once and creates the `lakehouse` warehouse on MinIO.
+    # Idempotent: it reads the current state before writing anything.
+    image: curlimages/curl:8.16.0
+    depends_on:
+      lakekeeper:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment: *minio-credentials
+    entrypoint: ["/bin/sh", "/config/bootstrap.sh"]
+    volumes:
+      - ./config/lakekeeper:/config:ro
+    restart: "no"
+
+  # ------------------------------------------------------------------ SQL engine
+  trino:
+    image: trinodb/trino:483
+    environment: *minio-credentials
+    depends_on:
+      lakekeeper-bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:28090:8080"
+    volumes:
+      - ./config/trino/catalog/lake.properties:/etc/trino/catalog/lake.properties:ro
+    # The image's own healthcheck (/usr/lib/trino/bin/health-check) is inherited.
+    mem_limit: 4g
+    restart: unless-stopped
+
+volumes:
+  minio-data:
+  platform-db:

@@ -62,7 +62,13 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 
 | Component | Pin | Checked |
 |---|---|---|
-| (filled in M0-S3, ADR-0001) | | |
+| MinIO | `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z.hotfix.7aa24e772` | 2026-09-24 |
+| mc | `quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z` | 2026-09-24 |
+| Postgres | `postgres:17.11-bookworm` | 2026-09-24 |
+| Lakekeeper | `quay.io/lakekeeper/catalog:v0.13.6` | 2026-09-24 |
+| Trino | `trinodb/trino:483` | 2026-09-24 |
+| curl | `curlimages/curl:8.16.0` | 2026-09-24 |
+| Python / uv | 3.12.13 / 0.11.25 | 2026-09-24 |
 
 ## Commands
 
@@ -70,7 +76,12 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 .\make.ps1 help        # every target
 .\make.ps1 check       # lint + types + unit tests (what CI's quality job runs)
 .\make.ps1 fetch       # Olist CSVs → data/raw/olist, verified against data/olist.sha256 + contract
+.\make.ps1 up          # env + doctor + compose up --wait (lake core: MinIO, Lakekeeper, Trino)
+.\make.ps1 test-integration   # round-trip through the running stack
+.\make.ps1 reset -Force       # down -v: deletes every volume
 ```
+
+Trino CLI inside the stack: `docker compose exec trino trino --catalog lake`.
 
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
