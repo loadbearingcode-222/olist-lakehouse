@@ -1,6 +1,7 @@
 # olist-lakehouse: the whole local platform. Grows story by story (docs/MILESTONES.md):
 #   M0 lake core: MinIO (S3) · platform-db (Postgres) · Lakekeeper (Iceberg REST) · Trino
 #   M1 source:    postgres-source (the Olist app DB) · replayer (profile `replay`)
+#   M1 CDC:       kafka (KRaft) · cdc-setup · connect (Debezium) · connect-register · console
 #
 # Conventions
 # - Image pins are exact and were checked live (ADR-0001, CLAUDE.md "Version pins").
@@ -188,7 +189,132 @@ services:
     mem_limit: 2g
     restart: on-failure
 
+  # ------------------------------------------------------------------ CDC: Kafka + Debezium
+  kafka:
+    # One KRaft node (broker + controller, no ZooKeeper). Two listeners: `kafka:9092` inside
+    # the network, `127.0.0.1:29092` for host clients (tests, the host-side tools).
+    image: apache/kafka:4.3.1
+    environment:
+      CLUSTER_ID: olist-lakehouse-kraft-01
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://127.0.0.1:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_HEAP_OPTS: -Xms512m -Xmx1g
+    ports:
+      - "127.0.0.1:29092:29092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+    mem_limit: 1536m
+    restart: unless-stopped
+
+  cdc-setup:
+    # One-shot: the debezium role and the olist_cdc publication (config/connectors/setup.sql).
+    image: postgres:17.11-bookworm
+    depends_on:
+      postgres-source:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres-source
+      PGUSER: olist
+      PGPASSWORD: ${SOURCE_DB_PASSWORD:?run .\make.ps1 env}
+      PGDATABASE: olist
+      DEBEZIUM_DB_PASSWORD: ${DEBEZIUM_DB_PASSWORD:?run .\make.ps1 env}
+    entrypoint: ["sh", "-c", "psql -X -q -v debezium_password=\"$$DEBEZIUM_DB_PASSWORD\" -f /config/setup.sql"]
+    volumes:
+      - ./config/connectors:/config:ro
+    restart: "no"
+
+  connect:
+    # Kafka Connect with the Debezium connectors. JSON without embedded schemas (ADR-0002).
+    # The DB password reaches the connector through EnvVarConfigProvider, never the REST API.
+    image: quay.io/debezium/connect:3.6.3.Final
+    depends_on:
+      kafka:
+        condition: service_healthy
+      cdc-setup:
+        condition: service_completed_successfully
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: olist-connect
+      CONFIG_STORAGE_TOPIC: _connect_configs
+      OFFSET_STORAGE_TOPIC: _connect_offsets
+      STATUS_STORAGE_TOPIC: _connect_status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 5000
+      CONNECT_CONFIG_PROVIDERS: env
+      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: org.apache.kafka.common.config.provider.EnvVarConfigProvider
+      DEBEZIUM_DB_PASSWORD: ${DEBEZIUM_DB_PASSWORD:?run .\make.ps1 env}
+      HEAP_OPTS: -Xms512m -Xmx1g
+    ports:
+      - "127.0.0.1:28083:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    mem_limit: 1536m
+    restart: unless-stopped
+
+  connect-register:
+    # One-shot: PUT the connector config and wait until it is RUNNING (config/connectors/).
+    image: curlimages/curl:8.16.0
+    depends_on:
+      connect:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/config/register.sh"]
+    volumes:
+      - ./config/connectors:/config:ro
+    restart: "no"
+
+  console:
+    # Redpanda Console: topics, messages, consumer lag and the Connect cluster, in a browser.
+    image: docker.redpanda.com/redpandadata/console:v3.12.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+      connect:
+        condition: service_healthy   # it probes Connect once at startup
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["kafka:9092"]
+        kafkaConnect:
+          enabled: true
+          clusters:
+            - name: olist-connect
+              url: http://connect:8083
+    entrypoint: ["/bin/sh", "-c", "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml && exec /app/console"]
+    ports:
+      - "127.0.0.1:28080:8080"
+    mem_limit: 256m
+    restart: unless-stopped
+
 volumes:
   minio-data:
   platform-db:
   source-db:
+  kafka-data:

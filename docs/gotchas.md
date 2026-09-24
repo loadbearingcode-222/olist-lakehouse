@@ -93,3 +93,6 @@ Entries above the seed line were paid for by earlier projects on this machine
     resolves to `::1` first, and libpq waits for that attempt to time out, because the stack
     publishes ports on `127.0.0.1` only. *Check:* connect to `127.0.0.1` (instant) versus
     `localhost` with `connect_timeout=5` (exactly 5 s). Host-side clients use `127.0.0.1`. (M1-S1)
+28. **`docker compose exec kafka /opt/kafka/bin/...` fails with "C:/Program Files/Git/opt/...
+    no such file".** Git Bash rewrites arguments that look like absolute POSIX paths.
+    *Check:* `export MSYS_NO_PATHCONV=1` first, or run the command from PowerShell. (M1-S2)

@@ -68,6 +68,11 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 | Lakekeeper | `quay.io/lakekeeper/catalog:v0.13.6` | 2026-09-24 |
 | Trino | `trinodb/trino:483` | 2026-09-24 |
 | curl | `curlimages/curl:8.16.0` | 2026-09-24 |
+| Kafka (KRaft) | `apache/kafka:4.3.1` | 2026-09-24 |
+| Debezium Connect | `quay.io/debezium/connect:3.6.3.Final` (Kafka Connect 4.3.0) | 2026-09-24 |
+| Redpanda Console | `docker.redpanda.com/redpandadata/console:v3.12.0` | 2026-09-24 |
+| app image base | `python:3.12.14-slim-bookworm` + `ghcr.io/astral-sh/uv:0.11.25` | 2026-09-24 |
+| psycopg / confluent-kafka | 3.3.6 / 2.15.1 | 2026-09-24 |
 | Python / uv | 3.12.13 / 0.11.25 | 2026-09-24 |
 
 ## Commands
@@ -83,6 +88,11 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 .\make.ps1 replay-stop       # graceful; resumes from replay.checkpoint on the next `replay`
 .\make.ps1 replay-verify     # row counts + chaos ledger vs the checkpoint (stop it first)
 ```
+
+CDC: topics `olist.olist.<table>` (3 partitions, 7-day retention), connector `olist-postgres`
+(status: `curl http://127.0.0.1:28083/connectors/olist-postgres/status`), Console at
+http://localhost:28080. Wire format: ADR-0002. Kafka CLI tools from Git Bash need
+`MSYS_NO_PATHCONV=1` (gotcha #28).
 
 Replayer facts: 866,582 events for the full dataset (2016-09-03 → 2018-10-17). At 1440× that is
 about 13 h of wall time, less because quiet gaps are skipped. The chaos rate is fixed by the
