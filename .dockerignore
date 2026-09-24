@@ -1,0 +1,13 @@
+# Image builds use the repo root as context. Only pyproject.toml, uv.lock, README.md and src/
+# are copied; everything below would otherwise be uploaded to the daemon on every build.
+.git
+.venv
+.env
+data
+automation
+tests
+docs
+**/__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache

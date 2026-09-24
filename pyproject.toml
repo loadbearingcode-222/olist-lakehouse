@@ -4,7 +4,9 @@ version = "0.0.0"
 description = "Local lakehouse: Olist CDC → Kafka → Spark → Iceberg → dbt → Airflow → Trino → Superset"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "psycopg[binary]>=3.3,<4",
+]
 
 [dependency-groups]
 dev = [
@@ -57,8 +59,9 @@ warn_unreachable = true
 
 [[tool.mypy.overrides]]
 # Only installed with the integration group, which CI's type check does not sync.
-module = ["trino.*"]
+module = ["trino", "trino.*"]
 ignore_missing_imports = true
+follow_imports = "skip"
 
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]

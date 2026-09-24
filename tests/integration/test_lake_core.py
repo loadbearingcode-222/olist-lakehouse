@@ -16,7 +16,8 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-TRINO_HOST, TRINO_PORT = "localhost", 28090
+# 127.0.0.1, not localhost: ports are published on IPv4 only (gotcha #27).
+TRINO_HOST, TRINO_PORT = "127.0.0.1", 28090
 SCHEMA = "lake.smoke"
 TABLE = f"{SCHEMA}.round_trip"
 

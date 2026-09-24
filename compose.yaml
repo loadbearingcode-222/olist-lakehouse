@@ -1,5 +1,6 @@
 # olist-lakehouse: the whole local platform. Grows story by story (docs/MILESTONES.md):
 #   M0 lake core: MinIO (S3) · platform-db (Postgres) · Lakekeeper (Iceberg REST) · Trino
+#   M1 source:    postgres-source (the Olist app DB) · replayer (profile `replay`)
 #
 # Conventions
 # - Image pins are exact and were checked live (ADR-0001, CLAUDE.md "Version pins").
@@ -129,6 +130,65 @@ services:
     mem_limit: 4g
     restart: unless-stopped
 
+  # ------------------------------------------------------------------ the Olist "app"
+  postgres-source:
+    # The application database Debezium captures. wal_level=logical is what CDC needs.
+    image: postgres:17.11-bookworm
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=4
+      - -c
+      - max_wal_senders=4
+    environment:
+      POSTGRES_USER: olist
+      POSTGRES_PASSWORD: ${SOURCE_DB_PASSWORD:?run .\make.ps1 env}
+      POSTGRES_DB: olist
+    ports:
+      - "127.0.0.1:25432:5432"
+    volumes:
+      - source-db:/var/lib/postgresql/data
+      - ./docker/postgres-source:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olist -d olist"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    mem_limit: 1g
+    restart: unless-stopped
+
+  replayer:
+    # Writes the Olist timeline into postgres-source on a compressed business clock.
+    # Not started by a plain `up`: `.\make.ps1 replay` starts it (profile `replay`).
+    # on-failure, not unless-stopped: a finished replay exits 0 and must stay down.
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: olist-lakehouse/app:dev
+    profiles: ["replay"]
+    command: ["olist_lakehouse.replayer"]
+    environment:
+      PGHOST: postgres-source
+      PGUSER: olist
+      PGPASSWORD: ${SOURCE_DB_PASSWORD:?run .\make.ps1 env}
+      PGDATABASE: olist
+      OLIST_DATA_DIR: /data
+      REPLAY_SPEED: ${REPLAY_SPEED:-1440}
+      REPLAY_SEED: ${REPLAY_SEED:-42}
+      # 2% of eligible events carry a defect by default: the quality gate (M2-S2) needs some.
+      CHAOS_RATE: ${CHAOS_RATE:-0.02}
+      REPLAY_UNTIL: ${REPLAY_UNTIL:-}
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      postgres-source:
+        condition: service_healthy
+    mem_limit: 2g
+    restart: on-failure
+
 volumes:
   minio-data:
   platform-db:
+  source-db:
