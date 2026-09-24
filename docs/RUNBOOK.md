@@ -3,6 +3,22 @@
 How to run, check and recover the platform. Commands are PowerShell from the repo root
 unless marked otherwise. Traps are in [gotchas.md](gotchas.md); decisions in [adr/](adr/).
 
+## The one-command demo
+
+`.\make.ps1 demo` runs fetch → up → replay (`REPLAY_SPEED=0`: as fast as Postgres allows) →
+`scripts/demo_acceptance.py`. That script waits for the replay and the clickstream to finish,
+stops them, waits until bronze has landed every Kafka offset, loads the FX rates, and
+triggers `lakehouse_build` in Airflow. It then runs nine checks and writes
+`automation/runs/m5-s2/demo.json`.
+
+- A replay can't be restarted at another speed or chaos rate on the same volumes. Run the
+  demo on fresh volumes (`.\make.ps1 reset -Force` first), or run it as its own project,
+  side by side with your data: `$env:COMPOSE_PROJECT_NAME = 'olist-demo'` (stop the other
+  stack first; the ports are the same).
+- Re-check a running stack without driving it:
+  `uv run --group integration python scripts/demo_acceptance.py --check`.
+- A `FAIL` names the check; its details (counts, examples, the exception) are in the JSON.
+
 ## Start, stop, reset
 
 | Goal | Command | Keeps data? |

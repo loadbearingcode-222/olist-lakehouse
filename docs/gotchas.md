@@ -157,3 +157,8 @@ Entries above the seed line were paid for by earlier projects on this machine
     server could not understand".** The client sent `Content-Type: application/json` with
     no body, and the endpoint tried to parse it (`/api/v1/chart/{id}/data/`). *Check:* the
     request headers. Send the JSON content type only with a body. (M5-S1)
+41. **`ImportError: DLL load failed while importing cimpl: The filename or extension is too
+    long`.** confluent-kafka's bundled DLLs sit about 100 characters below the repo root, and
+    Windows will not load a DLL whose path reaches MAX_PATH (260). A clone 159 characters deep
+    failed at 259. *Check:* the length of the repo path. `doctor` now refuses above 150
+    (`DOCTOR-PATH-LONG`). (M5-S2)

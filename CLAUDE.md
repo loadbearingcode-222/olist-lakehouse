@@ -94,6 +94,7 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 .\make.ps1 replay            # replayer + clickstream in the background (REPLAY_SPEED 1440, CHAOS_RATE 0.02)
 .\make.ps1 replay-stop       # graceful; resumes from replay.checkpoint on the next `replay`
 .\make.ps1 replay-verify     # row counts + chaos ledger vs the checkpoint (stop it first)
+.\make.ps1 demo              # fetch, up, full-speed replay, lakehouse_build, 9 end-to-end checks
 ```
 
 CDC: topics `olist.olist.<table>` (3 partitions, 7-day retention), connector `olist-postgres`

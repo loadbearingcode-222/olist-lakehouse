@@ -5,6 +5,7 @@
 #   DOCTOR-NO-DOCKER     the Docker daemon is not answering
 #   DOCTOR-PORT-FOREIGN  a port this project claims is held by something that is not ours
 #   DOCTOR-RAM-SHORT     Docker memory minus what foreign containers use is below our budget
+#   DOCTOR-PATH-LONG     the repo path is so long that .venv DLLs pass MAX_PATH (gotcha #41)
 #
 # A port held by THIS project's own container is fine (the stack is already up), so the holder
 # is resolved rather than just "is the port busy?". Keep this file ASCII-only (PowerShell 5.1).
@@ -15,7 +16,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Project = 'olist-lakehouse'
+# COMPOSE_PROJECT_NAME overrides compose.yaml's `name:` (the clean-clone demo runs as its own project).
+$Project = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME } else { 'olist-lakehouse' }
 # The 2xxxx port family (CLAUDE.md fleet ledger). Later stories' ports are claimed now, so a
 # collision shows up on day one rather than in M4.
 $Ports = [ordered]@{
@@ -45,6 +47,15 @@ function ConvertTo-Bytes {
                 'GiB' = 1GB; 'GB' = 1000000000; 'TiB' = 1TB }
     if (-not $scale.ContainsKey($unit)) { return 0 }
     return $n * $scale[$unit]
+}
+
+# 0. Path -----------------------------------------------------------------------------------
+# confluent-kafka's deepest DLL is exactly 100 characters below the repo root (.venv\Lib\n# site-packages\confluent_kafka.libs\libcrypto-3-x64-<32-char hash>.dll). Measured: a repo
+# 159 characters deep put it at 259 and the load failed (MAX_PATH is 260). Capping the repo at
+# 150 keeps every DLL at 250 or under.
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if ($repoRoot.Length -gt 150) {
+    $refusals.Add("DOCTOR-PATH-LONG: the repo path is $($repoRoot.Length) characters (max 150); clone it somewhere shorter")
 }
 
 # 1. Docker ---------------------------------------------------------------------------------
