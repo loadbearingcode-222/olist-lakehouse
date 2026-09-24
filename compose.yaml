@@ -365,6 +365,10 @@ services:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+      # Its CDC topics exist once the connector runs. This also keeps `up --wait` green: a
+      # one-shot that exits 0 counts as a failure unless someone waits for it (gotcha #29).
+      connect-register:
+        condition: service_completed_successfully
     mem_limit: 3g
     restart: unless-stopped
 

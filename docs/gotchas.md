@@ -96,3 +96,7 @@ Entries above the seed line were paid for by earlier projects on this machine
 28. **`docker compose exec kafka /opt/kafka/bin/...` fails with "C:/Program Files/Git/opt/...
     no such file".** Git Bash rewrites arguments that look like absolute POSIX paths.
     *Check:* `export MSYS_NO_PATHCONV=1` first, or run the command from PowerShell. (M1-S2)
+29. **`docker compose up --wait` fails with "container … exited (0)" on a healthy stack.** A
+    one-shot service that nobody depends on counts as failed once it exits, even with exit 0.
+    It passes by luck while the one-shot is still running. *Check:* every one-shot is named by
+    some service's `depends_on: condition: service_completed_successfully`. (M2-S1)
