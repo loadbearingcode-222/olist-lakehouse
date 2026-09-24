@@ -14,6 +14,13 @@ dev = [
     "pre-commit>=4.0",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/olist_lakehouse"]
+
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
 line-length = 100
@@ -39,7 +46,7 @@ known-first-party = ["olist_lakehouse", "story_lint", "layout_lint"]
 # ---------------------------------------------------------------- mypy
 [tool.mypy]
 python_version = "3.12"
-files = [".github/scripts", "tests"]
+files = ["src", ".github/scripts", "tests"]
 mypy_path = ".github/scripts"
 strict = true
 warn_unreachable = true

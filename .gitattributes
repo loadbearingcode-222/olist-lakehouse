@@ -4,6 +4,10 @@
 # PowerShell stays CRLF: Windows PowerShell 5.1 mishandles LF in here-strings.
 *.ps1 text eol=crlf
 
+# Fixtures are byte-exact on purpose: the reviews fixture holds a CRLF inside a quoted field and
+# the translation fixture starts with a BOM. Normalisation would erase the hazards they test.
+tests/fixtures/** -text
+
 # Never touch these.
 *.gz        binary
 *.zip       binary

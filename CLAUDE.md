@@ -69,7 +69,11 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 ```
 .\make.ps1 help        # every target
 .\make.ps1 check       # lint + types + unit tests (what CI's quality job runs)
+.\make.ps1 fetch       # Olist CSVs → data/raw/olist, verified against data/olist.sha256 + contract
 ```
+
+Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
+`docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
 
 ## Conventions
 
