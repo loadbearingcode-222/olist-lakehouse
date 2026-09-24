@@ -98,7 +98,8 @@ switch ($Target.ToLowerInvariant()) {
             @('replay',        'Start (or resume) the replayer and the clickstream producer'),
             @('replay-stop',   'Stop both (each resumes from its checkpoint later)'),
             @('replay-status', 'Where the replay and the clickstream are'),
-            @('replay-verify', 'Row counts + chaos ledger match the checkpoint?')
+            @('replay-verify', 'Row counts + chaos ledger match the checkpoint?'),
+            @('bronze-logs',   'Tail the bronze streaming job (Spark UI: http://localhost:24040)')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
     }
@@ -139,6 +140,7 @@ switch ($Target.ToLowerInvariant()) {
         Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'clickstream', 'olist_lakehouse.clickstream', '--status')
     }
     'replay-verify' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--verify') }
+    'bronze-logs'   { Invoke-Compose @('logs', '-f', '--tail=50', 'bronze-stream') }
     'check'     {
         & $PSCommandPath sync
         & $PSCommandPath lint
