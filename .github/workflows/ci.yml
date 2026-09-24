@@ -63,3 +63,23 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest tests/unit
+
+  compose-render:
+    name: compose render
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: compose.yaml renders with every required variable set
+        # Dummy values: this proves the file parses and every ${VAR:?} is declared in
+        # .env.example, not that the stack runs (that is each story's local acceptance).
+        run: |
+          sed 's/=$/=ci-dummy/' .env.example > .env
+          docker compose config --quiet
+          echo "services: $(docker compose config --services | tr '\n' ' ')"
+      - name: No image is left floating on a mutable tag
+        run: |
+          if docker compose config --images | grep -E ':(latest|main|latest-main)$|^[^:]+$'; then
+            echo "::error title=compose-render::IMAGE-UNPINNED: pin every image to an exact tag (ADR-0001)"
+            exit 1
+          fi

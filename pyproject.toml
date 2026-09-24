@@ -13,6 +13,10 @@ dev = [
     "mypy>=1.13",
     "pre-commit>=4.0",
 ]
+# Talks to the running stack (.\make.ps1 test-integration); CI does not install it.
+integration = [
+    "trino>=0.333",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -50,6 +54,11 @@ files = ["src", ".github/scripts", "tests"]
 mypy_path = ".github/scripts"
 strict = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# Only installed with the integration group, which CI's type check does not sync.
+module = ["trino.*"]
+ignore_missing_imports = true
 
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]

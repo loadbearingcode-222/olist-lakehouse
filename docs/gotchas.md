@@ -73,4 +73,19 @@ Entries above the seed line were paid for by earlier projects on this machine
 
 ## Earned here
 
-(none yet)
+22. **A PowerShell helper named `Uv` recursed forever instead of running `uv`.** PowerShell
+    command names are case-insensitive, so the function shadows the executable. *Check:* helper
+    functions use a verb-noun name (`Invoke-Uv`). (M0-S1)
+23. **`docker ps --format '{{.Label "x"}}'` returns nothing from Windows PowerShell 5.1.** It
+    strips the inner quotes when passing the argument, and the template fails silently.
+    *Check:* use `{{.Labels}}` and parse `key=value`. (M0-S3)
+24. **Killing a venv `python.exe` leaves the server running.** On Windows the venv interpreter
+    is a launcher that starts the real Python as a child process. *Check:*
+    `Get-NetTCPConnection -LocalPort N` → the owning PID's command line. (M0-S3)
+25. **Lakekeeper warehouse JSON copied from older examples is rejected or ignored.** In v0.13
+    the S3 credential fields are `access-key-id` and `secret-access-key`, and the flavor is
+    `s3-compat`. *Check:* `docker run --rm quay.io/lakekeeper/catalog:<tag> management-openapi`
+    is the schema for that exact tag. (M0-S3)
+26. **`compose up` does not re-run a one-shot service that already exited 0**, so a second
+    `up` never exercised the bootstrap. *Check:* prove idempotence with
+    `docker compose run --rm <one-shot>`. (M0-S3)

@@ -18,4 +18,4 @@ Date: YYYY-MM-DD · Story: M#-S# · Status: accepted | superseded by NNNN
 
 | ADR | Decision | Story |
 |---|---|---|
-| (none yet; 0001 stack and image pins lands in M0-S3) | | |
+| [0001](0001-lake-core-stack-and-pins.md) | Lake core: Lakekeeper + MinIO + Trino, exact image pins | M0-S3 |
