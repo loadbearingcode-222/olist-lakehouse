@@ -95,9 +95,9 @@ switch ($Target.ToLowerInvariant()) {
             @('logs',      'Tail logs from all services'),
             @('reset',     'Stop the stack AND delete its volumes (needs -Force)'),
             @('test-integration', 'Integration tests against the running stack'),
-            @('replay',        'Start (or resume) the Olist replayer in the background'),
-            @('replay-stop',   'Stop the replayer (it resumes from its checkpoint later)'),
-            @('replay-status', 'Where the replay is, in events and business time'),
+            @('replay',        'Start (or resume) the replayer and the clickstream producer'),
+            @('replay-stop',   'Stop both (each resumes from its checkpoint later)'),
+            @('replay-status', 'Where the replay and the clickstream are'),
             @('replay-verify', 'Row counts + chaos ledger match the checkpoint?')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
@@ -132,9 +132,12 @@ switch ($Target.ToLowerInvariant()) {
         $env:OLIST_STACK_REQUIRED = '1'
         Invoke-Uv @('run', '--group', 'integration', 'pytest', 'tests/integration', '-m', 'integration')
     }
-    'replay'        { Invoke-Compose @('--profile', 'replay', 'up', '-d', '--build', 'replayer') }
-    'replay-stop'   { Invoke-Compose @('--profile', 'replay', 'stop', 'replayer') }
-    'replay-status' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--status') }
+    'replay'        { Invoke-Compose @('--profile', 'replay', 'up', '-d', '--build', 'replayer', 'clickstream') }
+    'replay-stop'   { Invoke-Compose @('--profile', 'replay', 'stop', 'replayer', 'clickstream') }
+    'replay-status' {
+        Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--status')
+        Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'clickstream', 'olist_lakehouse.clickstream', '--status')
+    }
     'replay-verify' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--verify') }
     'check'     {
         & $PSCommandPath sync

@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "psycopg[binary]>=3.3,<4",
+    "confluent-kafka>=2.15,<3",
+    "faker>=40,<41",
 ]
 
 [dependency-groups]
@@ -18,7 +20,6 @@ dev = [
 # Talks to the running stack (.\make.ps1 test-integration); CI does not install it.
 integration = [
     "trino>=0.333",
-    "confluent-kafka>=2.15,<3",
 ]
 
 [build-system]
@@ -59,8 +60,14 @@ strict = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
+# confluent-kafka ships no type hints (the C extension); treat it as Any, everywhere.
+module = ["confluent_kafka", "confluent_kafka.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
 # Only installed with the integration group, which CI's type check does not sync.
-module = ["trino", "trino.*", "confluent_kafka", "confluent_kafka.*"]
+module = ["trino", "trino.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 

@@ -1,6 +1,6 @@
 # olist-lakehouse: the whole local platform. Grows story by story (docs/MILESTONES.md):
 #   M0 lake core: MinIO (S3) · platform-db (Postgres) · Lakekeeper (Iceberg REST) · Trino
-#   M1 source:    postgres-source (the Olist app DB) · replayer (profile `replay`)
+#   M1 source:    postgres-source (the Olist app DB) · replayer + clickstream (profile `replay`)
 #   M1 CDC:       kafka (KRaft) · cdc-setup · connect (Debezium) · connect-register · console
 #
 # Conventions
@@ -187,6 +187,28 @@ services:
       postgres-source:
         condition: service_healthy
     mem_limit: 2g
+    restart: on-failure
+
+  clickstream:
+    # Web sessions for every replayed order, to Kafka topic clickstream.events (M1-S3).
+    # Same image as the replayer; `.\make.ps1 replay` builds it once and starts both.
+    image: olist-lakehouse/app:dev
+    profiles: ["replay"]
+    command: ["olist_lakehouse.clickstream"]
+    environment:
+      PGHOST: postgres-source
+      PGUSER: olist
+      PGPASSWORD: ${SOURCE_DB_PASSWORD:?run .\make.ps1 env}
+      PGDATABASE: olist
+      KAFKA_BOOTSTRAP: kafka:9092
+      REPLAY_SEED: ${REPLAY_SEED:-42}
+      CHAOS_RATE: ${CHAOS_RATE:-0.02}
+    depends_on:
+      postgres-source:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    mem_limit: 512m
     restart: on-failure
 
   # ------------------------------------------------------------------ CDC: Kafka + Debezium
