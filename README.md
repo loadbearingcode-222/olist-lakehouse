@@ -26,8 +26,10 @@ orchestration):
 - Airflow 3 backfills ECB FX rates over the whole period. `lakehouse_build` checks bronze
   with Great Expectations (a failed check stops dbt, and Data Docs show why), builds silver
   and gold, and compacts Iceberg.
+- Superset serves four dashboards as code (Revenue BRL/USD, Delivery SLA, Funnel, Stream
+  health), built on tested gold marts and imported from git on every start.
 
-Next is M5 (Superset dashboards and the one-command demo). The plan, in the order it merges, is in
+Next is the one-command demo (M5-S2). The plan, in the order it merges, is in
 [docs/MILESTONES.md](docs/MILESTONES.md).
 
 ## Quickstart (Windows, Docker Desktop, uv, Kaggle CLI configured)
@@ -43,6 +45,7 @@ Next is M5 (Superset dashboards and the one-command demo). The plan, in the orde
 .\make.ps1 fx                 # ECB BRL->USD rates into bronze
 .\make.ps1 dbt build          # silver + gold, with tests
 .\make.ps1 reconcile          # silver vs Postgres, every row and column
+.\make.ps1 superset-build     # rebuild the dashboards via the API, export to superset/dashboards
 ```
 
 | Service | URL |
@@ -53,6 +56,7 @@ Next is M5 (Superset dashboards and the one-command demo). The plan, in the orde
 | Kafka (Redpanda Console) | http://localhost:28080 |
 | Spark (Structured Streaming) | http://localhost:24040 |
 | Airflow | http://localhost:28082 (admin / `AIRFLOW_ADMIN_PASSWORD` in `.env`) |
+| Superset | http://localhost:28088 (admin / `SUPERSET_ADMIN_PASSWORD` in `.env`) |
 | Great Expectations Data Docs | http://localhost:28089 |
 | Postgres (the Olist app) | 127.0.0.1:25432, db `olist` |
 

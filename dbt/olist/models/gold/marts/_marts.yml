@@ -1,0 +1,55 @@
+version: 2
+
+# Marts: one per dashboard (superset/dashboards). Contracts enforced, like all of gold.
+
+models:
+  - name: mart_daily_revenue
+    columns:
+      - {name: purchase_date, data_type: date, data_tests: [unique, not_null]}
+      - {name: orders, data_type: integer}
+      - {name: flagged_orders, data_type: integer}
+      - {name: revenue_brl, data_type: "decimal(16,2)"}
+      - {name: revenue_usd, data_type: "decimal(16,2)"}
+
+  - name: mart_delivery_sla
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [purchase_month, customer_state]}
+      - dbt_utils.expression_is_true:
+          arguments: {expression: "late_share between 0 and 1"}
+    columns:
+      - {name: purchase_month, data_type: date}
+      - {name: customer_state, data_type: varchar}
+      - {name: delivered_orders, data_type: integer}
+      - {name: avg_delivery_days, data_type: double}
+      - {name: late_share, data_type: double}
+
+  - name: mart_funnel_weekly
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >-
+              sessions >= sessions_with_cart and sessions_with_cart >= sessions_with_checkout
+              and sessions_with_checkout >= converted_sessions
+    columns:
+      - {name: week, data_type: date, data_tests: [unique, not_null]}
+      - {name: sessions, data_type: integer}
+      - {name: sessions_with_cart, data_type: integer}
+      - {name: sessions_with_checkout, data_type: integer}
+      - {name: converted_sessions, data_type: integer}
+      - {name: conversion_rate, data_type: double}
+
+  - name: mart_stream_health
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [source, rule]}
+    columns:
+      - {name: source, data_type: varchar}
+      - {name: rule, data_type: varchar}
+      - {name: kind, data_type: varchar}
+      - {name: batches, data_type: integer}
+      - {name: rows_in_scope, data_type: bigint}
+      - {name: gate_violations, data_type: bigint}
+      - {name: gx_unexpected, data_type: bigint}
+      - {name: quarantined, data_type: bigint}
+      - {name: gate_and_gx_agree, data_type: boolean}

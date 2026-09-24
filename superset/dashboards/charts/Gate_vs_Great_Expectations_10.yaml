@@ -1,0 +1,46 @@
+slice_name: Gate vs Great Expectations
+description: null
+certified_by: null
+certification_details: null
+viz_type: table
+params:
+  datasource: 4__table
+  viz_type: table
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(gate_violations)
+    label: Gate
+  - expressionType: SQL
+    sqlExpression: SUM(gx_unexpected)
+    label: GX
+  - expressionType: SQL
+    sqlExpression: MIN(CASE WHEN gate_and_gx_agree THEN 1 ELSE 0 END)
+    label: Agree (1 = yes)
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: kind = 'gate'
+    clause: WHERE
+  row_limit: 10000
+  time_range: No filter
+  query_mode: aggregate
+  groupby:
+  - source
+  - rule
+query_context: '{"datasource": {"id": 4, "type": "table"}, "force": false, "queries":
+  [{"columns": ["source", "rule"], "metrics": [{"expressionType": "SQL", "sqlExpression":
+  "SUM(gate_violations)", "label": "Gate"}, {"expressionType": "SQL", "sqlExpression":
+  "SUM(gx_unexpected)", "label": "GX"}, {"expressionType": "SQL", "sqlExpression":
+  "MIN(CASE WHEN gate_and_gx_agree THEN 1 ELSE 0 END)", "label": "Agree (1 = yes)"}],
+  "orderby": [], "row_limit": 10000, "filters": [], "extras": {"where": "kind = ''gate''",
+  "having": ""}, "time_range": "No filter"}], "form_data": {"datasource": "4__table",
+  "viz_type": "table", "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(gate_violations)",
+  "label": "Gate"}, {"expressionType": "SQL", "sqlExpression": "SUM(gx_unexpected)",
+  "label": "GX"}, {"expressionType": "SQL", "sqlExpression": "MIN(CASE WHEN gate_and_gx_agree
+  THEN 1 ELSE 0 END)", "label": "Agree (1 = yes)"}], "adhoc_filters": [{"expressionType":
+  "SQL", "sqlExpression": "kind = ''gate''", "clause": "WHERE"}], "row_limit": 10000,
+  "time_range": "No filter", "query_mode": "aggregate", "groupby": ["source", "rule"]},
+  "result_format": "json", "result_type": "full"}'
+cache_timeout: null
+uuid: 88e6adf8-652b-41e1-bb05-1a737f323203
+version: 1.0.0
+dataset_uuid: 0c7620ac-f440-4815-9db3-227fbf66ff2c

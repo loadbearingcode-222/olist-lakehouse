@@ -64,7 +64,7 @@ known-first-party = ["olist_lakehouse", "story_lint", "layout_lint"]
 [tool.mypy]
 python_version = "3.12"
 files = ["src", ".github/scripts", "scripts", "tests"]
-mypy_path = ".github/scripts"
+mypy_path = ".github/scripts,scripts"
 strict = true
 warn_unreachable = true
 
@@ -101,7 +101,7 @@ follow_imports = "skip"
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-pythonpath = [".github/scripts"]
+pythonpath = [".github/scripts", "scripts"]
 addopts = "-ra --strict-markers --strict-config"
 markers = [
     "integration: needs the compose stack up (.\\make.ps1 test-integration)",

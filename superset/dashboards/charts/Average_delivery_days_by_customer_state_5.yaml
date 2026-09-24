@@ -1,0 +1,30 @@
+slice_name: Average delivery days by customer state
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_bar
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(avg_delivery_days * delivered_orders) / SUM(delivered_orders)
+    label: Delivery days
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  x_axis: customer_state
+  groupby: []
+query_context: '{"datasource": {"id": 2, "type": "table"}, "force": false, "queries":
+  [{"columns": ["customer_state"], "metrics": [{"expressionType": "SQL", "sqlExpression":
+  "SUM(avg_delivery_days * delivered_orders) / SUM(delivered_orders)", "label": "Delivery
+  days"}], "orderby": [], "row_limit": 10000, "filters": [], "extras": {"where": "",
+  "having": ""}, "time_range": "No filter"}], "form_data": {"datasource": "2__table",
+  "viz_type": "echarts_timeseries_bar", "metrics": [{"expressionType": "SQL", "sqlExpression":
+  "SUM(avg_delivery_days * delivered_orders) / SUM(delivered_orders)", "label": "Delivery
+  days"}], "adhoc_filters": [], "row_limit": 10000, "time_range": "No filter", "x_axis":
+  "customer_state", "groupby": []}, "result_format": "json", "result_type": "full"}'
+cache_timeout: null
+uuid: 67cd7f3e-938f-47a7-bd3e-21925200f9fb
+version: 1.0.0
+dataset_uuid: 614699a5-b95d-454d-880a-2ab07041c6a1

@@ -61,6 +61,8 @@ function Invoke-Env {
         'AIRFLOW_ADMIN_PASSWORD'    = (New-Secret 16)
         'AIRFLOW_FERNET_KEY'        = (New-FernetKey)
         'AIRFLOW_JWT_SECRET'        = (New-Secret 48)
+        'SUPERSET_SECRET_KEY'       = (New-Secret 48)
+        'SUPERSET_ADMIN_PASSWORD'   = (New-Secret 16)
     }
     $keys = @(Get-Content -LiteralPath '.env.example' | Where-Object { $_ -match '^([A-Z0-9_]+)=$' } | ForEach-Object { $_.TrimEnd('=') })
     $missing = @($keys | Where-Object { -not $values.ContainsKey($_) })
@@ -117,6 +119,7 @@ switch ($Target.ToLowerInvariant()) {
             @('dbt',           'Run dbt against the lake, e.g. .\make.ps1 dbt build (host -> Trino 127.0.0.1:28090)'),
             @('fx',            'Load BRL->USD ECB rates into bronze: -Rest 2016-08-25,2018-10-31 (default range)'),
             @('reconcile',     'Silver vs Postgres, every live row and column (chaos keys counted, not hidden)'),
+            @('superset-build', 'Rebuild the 4 dashboards via the Superset API and export them to superset/dashboards'),
             @('drills',        'Failure drills: kill Connect, kill Spark, restart Kafka (evidence -> automation/runs/m2-s3)')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
@@ -139,6 +142,8 @@ switch ($Target.ToLowerInvariant()) {
         Write-Host '  Lakekeeper UI  ->  http://localhost:28181/ui' -ForegroundColor Green
         Write-Host '  Trino UI       ->  http://localhost:28090   (any user name, no password)' -ForegroundColor Green
         Write-Host '  Airflow        ->  http://localhost:28082   (admin / AIRFLOW_ADMIN_PASSWORD in .env)' -ForegroundColor Green
+        Write-Host '  Superset       ->  http://localhost:28088   (admin / SUPERSET_ADMIN_PASSWORD in .env)' -ForegroundColor Green
+        Write-Host '  Data Docs      ->  http://localhost:28089' -ForegroundColor Green
         Write-Host ''
     }
     'down'      { Invoke-Compose @('down') }
@@ -171,6 +176,7 @@ switch ($Target.ToLowerInvariant()) {
         Invoke-Uv @('run', '--group', 'integration', 'python', '-m', 'olist_lakehouse.fx', '--start', $range[0], '--end', $range[1])
     }
     'reconcile'     { Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/reconcile.py', '--write') }
+    'superset-build' { Invoke-Uv @('run', '--group', 'integration', 'python', 'scripts/superset_dashboards.py') }
     'drills'        {
         $env:OLIST_STACK_REQUIRED = '1'
         Invoke-Uv @('run', '--group', 'integration', 'pytest', 'tests/integration/test_drills.py', '-s')

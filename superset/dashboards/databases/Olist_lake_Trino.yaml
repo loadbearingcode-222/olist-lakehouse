@@ -1,0 +1,18 @@
+database_name: Olist lake (Trino)
+sqlalchemy_uri: trino://superset@trino:8080/lake
+cache_timeout: null
+expose_in_sqllab: true
+allow_run_async: false
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_file_upload: false
+extra:
+  metadata_params: {}
+  engine_params: {}
+  metadata_cache_timeout: {}
+  schemas_allowed_for_file_upload: []
+impersonate_user: false
+configuration_method: sqlalchemy_form
+uuid: 696df581-c362-4e22-87f1-4f349d75a04d
+version: 1.0.0

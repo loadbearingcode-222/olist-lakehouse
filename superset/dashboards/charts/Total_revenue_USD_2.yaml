@@ -1,0 +1,27 @@
+slice_name: Total revenue (USD)
+description: null
+certified_by: null
+certification_details: null
+viz_type: big_number_total
+params:
+  datasource: 1__table
+  viz_type: big_number_total
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  metric:
+    expressionType: SQL
+    sqlExpression: SUM(revenue_usd)
+    label: Revenue USD
+query_context: '{"datasource": {"id": 1, "type": "table"}, "force": false, "queries":
+  [{"columns": [], "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(revenue_usd)",
+  "label": "Revenue USD"}], "orderby": [], "row_limit": 10000, "filters": [], "extras":
+  {"where": "", "having": ""}, "time_range": "No filter"}], "form_data": {"datasource":
+  "1__table", "viz_type": "big_number_total", "adhoc_filters": [], "row_limit": 10000,
+  "time_range": "No filter", "metric": {"expressionType": "SQL", "sqlExpression":
+  "SUM(revenue_usd)", "label": "Revenue USD"}}, "result_format": "json", "result_type":
+  "full"}'
+cache_timeout: null
+uuid: a947b55d-7197-4b93-92e7-e46edc9ab71e
+version: 1.0.0
+dataset_uuid: 93d24cdf-12bb-486a-98af-886800551727

@@ -1,0 +1,44 @@
+slice_name: Funnel stages (all weeks)
+description: null
+certified_by: null
+certification_details: null
+viz_type: table
+params:
+  datasource: 3__table
+  viz_type: table
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(sessions)
+    label: Sessions
+  - expressionType: SQL
+    sqlExpression: SUM(sessions_with_cart)
+    label: Cart
+  - expressionType: SQL
+    sqlExpression: SUM(sessions_with_checkout)
+    label: Checkout
+  - expressionType: SQL
+    sqlExpression: SUM(converted_sessions)
+    label: Purchase
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  query_mode: aggregate
+  groupby: []
+query_context: '{"datasource": {"id": 3, "type": "table"}, "force": false, "queries":
+  [{"columns": [], "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(sessions)",
+  "label": "Sessions"}, {"expressionType": "SQL", "sqlExpression": "SUM(sessions_with_cart)",
+  "label": "Cart"}, {"expressionType": "SQL", "sqlExpression": "SUM(sessions_with_checkout)",
+  "label": "Checkout"}, {"expressionType": "SQL", "sqlExpression": "SUM(converted_sessions)",
+  "label": "Purchase"}], "orderby": [], "row_limit": 10000, "filters": [], "extras":
+  {"where": "", "having": ""}, "time_range": "No filter"}], "form_data": {"datasource":
+  "3__table", "viz_type": "table", "metrics": [{"expressionType": "SQL", "sqlExpression":
+  "SUM(sessions)", "label": "Sessions"}, {"expressionType": "SQL", "sqlExpression":
+  "SUM(sessions_with_cart)", "label": "Cart"}, {"expressionType": "SQL", "sqlExpression":
+  "SUM(sessions_with_checkout)", "label": "Checkout"}, {"expressionType": "SQL", "sqlExpression":
+  "SUM(converted_sessions)", "label": "Purchase"}], "adhoc_filters": [], "row_limit":
+  10000, "time_range": "No filter", "query_mode": "aggregate", "groupby": []}, "result_format":
+  "json", "result_type": "full"}'
+cache_timeout: null
+uuid: 879fff9b-a638-46a5-919a-ca03fcdaaa99
+version: 1.0.0
+dataset_uuid: 5531825b-f157-4a77-b33d-69a6c6f9caa1

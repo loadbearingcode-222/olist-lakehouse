@@ -1,0 +1,37 @@
+slice_name: Revenue per month (BRL and USD)
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 1__table
+  viz_type: echarts_timeseries_line
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(revenue_brl)
+    label: Revenue BRL
+  - expressionType: SQL
+    sqlExpression: SUM(revenue_usd)
+    label: Revenue USD
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  x_axis: purchase_date
+  time_grain_sqla: P1M
+  groupby: []
+query_context: '{"datasource": {"id": 1, "type": "table"}, "force": false, "queries":
+  [{"columns": [{"timeGrain": "P1M", "columnType": "BASE_AXIS", "sqlExpression": "purchase_date",
+  "label": "purchase_date", "expressionType": "SQL"}], "metrics": [{"expressionType":
+  "SQL", "sqlExpression": "SUM(revenue_brl)", "label": "Revenue BRL"}, {"expressionType":
+  "SQL", "sqlExpression": "SUM(revenue_usd)", "label": "Revenue USD"}], "orderby":
+  [], "row_limit": 10000, "filters": [], "extras": {"where": "", "having": ""}, "time_range":
+  "No filter"}], "form_data": {"datasource": "1__table", "viz_type": "echarts_timeseries_line",
+  "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(revenue_brl)", "label":
+  "Revenue BRL"}, {"expressionType": "SQL", "sqlExpression": "SUM(revenue_usd)", "label":
+  "Revenue USD"}], "adhoc_filters": [], "row_limit": 10000, "time_range": "No filter",
+  "x_axis": "purchase_date", "time_grain_sqla": "P1M", "groupby": []}, "result_format":
+  "json", "result_type": "full"}'
+cache_timeout: null
+uuid: f2802e13-f651-4022-8a03-8d98d85c1bd6
+version: 1.0.0
+dataset_uuid: 93d24cdf-12bb-486a-98af-886800551727

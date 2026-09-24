@@ -1,0 +1,170 @@
+dashboard_title: Funnel
+description: null
+css: null
+slug: funnel
+certified_by: null
+certification_details: null
+published: true
+uuid: 63d1cc12-7840-44f6-ae60-8598ee65b4bf
+position:
+  DASHBOARD_VERSION_KEY: v2
+  ROOT_ID:
+    type: ROOT
+    id: ROOT_ID
+    children:
+    - GRID_ID
+  GRID_ID:
+    type: GRID
+    id: GRID_ID
+    children:
+    - ROW-1
+    - ROW-2
+    - ROW-3
+    - ROW-N-VT6VND0Z
+    parents:
+    - ROOT_ID
+  HEADER_ID:
+    id: HEADER_ID
+    type: HEADER
+    meta:
+      text: Funnel
+  ROW-1:
+    type: ROW
+    id: ROW-1
+    children:
+    - MARKDOWN-notes
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  MARKDOWN-notes:
+    type: MARKDOWN
+    id: MARKDOWN-notes
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-1
+    meta:
+      width: 12
+      height: 12
+      code: 'Stages are cumulative: a purchase implies checkout and cart, because
+        earlier events can be missing (orders without items; quarantined drift events).'
+  ROW-2:
+    type: ROW
+    id: ROW-2
+    children:
+    - CHART-6
+    - CHART-7
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-6:
+    type: CHART
+    id: CHART-6
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      chartId: 6
+      width: 8
+      height: 50
+      sliceName: Sessions and conversions per week
+  CHART-7:
+    type: CHART
+    id: CHART-7
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      chartId: 7
+      width: 4
+      height: 50
+      sliceName: Overall conversion rate
+  ROW-3:
+    type: ROW
+    id: ROW-3
+    children:
+    - CHART-8
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-8:
+    type: CHART
+    id: CHART-8
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-3
+    meta:
+      chartId: 8
+      width: 12
+      height: 50
+      sliceName: Funnel stages (all weeks)
+  ROW-N-VT6VND0Z:
+    children:
+    - CHART-P811K3T0
+    - CHART-2QIV9TNE
+    - CHART-GJF120ZP
+    id: ROW-N-VT6VND0Z
+    meta:
+      '0': ROOT_ID
+      background: BACKGROUND_TRANSPARENT
+    type: ROW
+    parents:
+    - ROOT_ID
+    - GRID_ID
+  CHART-P811K3T0:
+    children: []
+    id: CHART-P811K3T0
+    meta:
+      chartId: 6
+      height: 50
+      sliceName: Sessions and conversions per week
+      uuid: 65308796-3b9c-48fd-ba97-23a76e6aa9f8
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-VT6VND0Z
+  CHART-2QIV9TNE:
+    children: []
+    id: CHART-2QIV9TNE
+    meta:
+      chartId: 7
+      height: 50
+      sliceName: Overall conversion rate
+      uuid: 4d5059bd-c367-4fc6-85ee-64f23fbbd239
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-VT6VND0Z
+  CHART-GJF120ZP:
+    children: []
+    id: CHART-GJF120ZP
+    meta:
+      chartId: 8
+      height: 50
+      sliceName: Funnel stages (all weeks)
+      uuid: 879fff9b-a638-46a5-919a-ca03fcdaaa99
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-VT6VND0Z
+theme_uuid: null
+version: 1.0.0

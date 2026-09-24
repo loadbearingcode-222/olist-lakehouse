@@ -1,0 +1,171 @@
+dashboard_title: Revenue
+description: null
+css: null
+slug: revenue
+certified_by: null
+certification_details: null
+published: true
+uuid: 86e8f238-da5e-4d03-9d0f-9d4a06093902
+position:
+  DASHBOARD_VERSION_KEY: v2
+  ROOT_ID:
+    type: ROOT
+    id: ROOT_ID
+    children:
+    - GRID_ID
+  GRID_ID:
+    type: GRID
+    id: GRID_ID
+    children:
+    - ROW-1
+    - ROW-2
+    - ROW-3
+    - ROW-N-8LW5L8EC
+    parents:
+    - ROOT_ID
+  HEADER_ID:
+    id: HEADER_ID
+    type: HEADER
+    meta:
+      text: Revenue
+  ROW-1:
+    type: ROW
+    id: ROW-1
+    children:
+    - MARKDOWN-notes
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  MARKDOWN-notes:
+    type: MARKDOWN
+    id: MARKDOWN-notes
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-1
+    meta:
+      width: 12
+      height: 12
+      code: Trusted orders only, excluding canceled/unavailable. Flagged orders (silver
+        `_dq_issues`) are counted separately. USD uses the ECB rate of the purchase
+        day.
+  ROW-2:
+    type: ROW
+    id: ROW-2
+    children:
+    - CHART-1
+    - CHART-2
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-1:
+    type: CHART
+    id: CHART-1
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      chartId: 1
+      width: 8
+      height: 50
+      sliceName: Revenue per month (BRL and USD)
+  CHART-2:
+    type: CHART
+    id: CHART-2
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      chartId: 2
+      width: 4
+      height: 50
+      sliceName: Total revenue (USD)
+  ROW-3:
+    type: ROW
+    id: ROW-3
+    children:
+    - CHART-3
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-3:
+    type: CHART
+    id: CHART-3
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-3
+    meta:
+      chartId: 3
+      width: 12
+      height: 50
+      sliceName: Orders per month
+  ROW-N-8LW5L8EC:
+    children:
+    - CHART-R0X003WJ
+    - CHART-DQ0HU37K
+    - CHART-7QAZG4Z6
+    id: ROW-N-8LW5L8EC
+    meta:
+      '0': ROOT_ID
+      background: BACKGROUND_TRANSPARENT
+    type: ROW
+    parents:
+    - ROOT_ID
+    - GRID_ID
+  CHART-R0X003WJ:
+    children: []
+    id: CHART-R0X003WJ
+    meta:
+      chartId: 3
+      height: 50
+      sliceName: Orders per month
+      uuid: a3916ced-2118-4cae-b874-6b618c26e807
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-8LW5L8EC
+  CHART-DQ0HU37K:
+    children: []
+    id: CHART-DQ0HU37K
+    meta:
+      chartId: 1
+      height: 50
+      sliceName: Revenue per month (BRL and USD)
+      uuid: f2802e13-f651-4022-8a03-8d98d85c1bd6
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-8LW5L8EC
+  CHART-7QAZG4Z6:
+    children: []
+    id: CHART-7QAZG4Z6
+    meta:
+      chartId: 2
+      height: 50
+      sliceName: Total revenue (USD)
+      uuid: a947b55d-7197-4b93-92e7-e46edc9ab71e
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-8LW5L8EC
+theme_uuid: null
+version: 1.0.0

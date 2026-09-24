@@ -1,0 +1,37 @@
+slice_name: Orders per month
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_bar
+params:
+  datasource: 1__table
+  viz_type: echarts_timeseries_bar
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(orders)
+    label: Orders
+  - expressionType: SQL
+    sqlExpression: SUM(flagged_orders)
+    label: Flagged orders
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  x_axis: purchase_date
+  time_grain_sqla: P1M
+  groupby: []
+query_context: '{"datasource": {"id": 1, "type": "table"}, "force": false, "queries":
+  [{"columns": [{"timeGrain": "P1M", "columnType": "BASE_AXIS", "sqlExpression": "purchase_date",
+  "label": "purchase_date", "expressionType": "SQL"}], "metrics": [{"expressionType":
+  "SQL", "sqlExpression": "SUM(orders)", "label": "Orders"}, {"expressionType": "SQL",
+  "sqlExpression": "SUM(flagged_orders)", "label": "Flagged orders"}], "orderby":
+  [], "row_limit": 10000, "filters": [], "extras": {"where": "", "having": ""}, "time_range":
+  "No filter"}], "form_data": {"datasource": "1__table", "viz_type": "echarts_timeseries_bar",
+  "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(orders)", "label": "Orders"},
+  {"expressionType": "SQL", "sqlExpression": "SUM(flagged_orders)", "label": "Flagged
+  orders"}], "adhoc_filters": [], "row_limit": 10000, "time_range": "No filter", "x_axis":
+  "purchase_date", "time_grain_sqla": "P1M", "groupby": []}, "result_format": "json",
+  "result_type": "full"}'
+cache_timeout: null
+uuid: a3916ced-2118-4cae-b874-6b618c26e807
+version: 1.0.0
+dataset_uuid: 93d24cdf-12bb-486a-98af-886800551727
