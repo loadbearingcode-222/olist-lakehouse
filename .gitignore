@@ -1,0 +1,49 @@
+# --- secrets / local env ---
+.env
+kaggle.json
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# --- data: CSVs are never committed (CC BY-NC-SA, 126 MB); the manifest is ---
+# `data/*` (not `data/`) so git still descends and the `!` rule below works.
+data/*
+!data/olist.sha256
+
+# --- evidence is tracked, logs and status files are not ---
+automation/*
+!automation/runs/
+automation/runs/**
+!automation/runs/**/
+!automation/runs/**/*.json
+
+# --- tool output ---
+dbt/**/target/
+dbt/**/logs/
+dbt/**/dbt_packages/
+**/uncommitted/
+spark-warehouse/
+metastore_db/
+derby.log
+*.log
+
+# --- never in this repo (docs/MILESTONES.md, "Never in the repo") ---
+HANDOFF.md
+.idea/
+.vscode/
+.claude/
+*.transcript*
+
+# --- os ---
+.DS_Store
+Thumbs.db
