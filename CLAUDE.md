@@ -74,6 +74,9 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 | app image base | `python:3.12.14-slim-bookworm` + `ghcr.io/astral-sh/uv:0.11.25` | 2026-09-24 |
 | psycopg / confluent-kafka | 3.3.6 / 2.15.1 | 2026-09-24 |
 | Python / uv | 3.12.13 / 0.11.25 | 2026-09-24 |
+| Spark | `apache/spark:4.1.3-scala2.13-java21-python3-ubuntu` (Hadoop 3.4.2) | 2026-09-24 |
+| Iceberg (Spark) | `iceberg-spark-runtime-4.1_2.13` + `iceberg-aws-bundle` 1.11.0 | 2026-09-24 |
+| Spark Kafka / S3A | `spark-sql-kafka-0-10_2.13:4.1.3`, `hadoop-aws:3.4.2`, AWS SDK `bundle:2.29.52` | 2026-09-24 |
 
 ## Commands
 
@@ -105,6 +108,11 @@ fresh `source-db` volume. Host-side clients connect to `127.0.0.1`, never `local
 (gotcha #27).
 
 Trino CLI inside the stack: `docker compose exec trino trino --catalog lake`.
+
+Bronze: `bronze-stream` (Spark local[4]) writes `lake.bronze.cdc_events` and
+`lake.bronze.clickstream_events`, with checkpoints in `s3a://lakehouse/checkpoints/bronze/`.
+Spark UI is at http://localhost:24040. Exactly-once is by offset anti-join (ADR-0003).
+`.\make.ps1 bronze-logs` tails it.
 
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.

@@ -60,6 +60,11 @@ strict = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
+# PySpark comes from the Spark image (docker/spark/), not from uv.lock.
+module = ["pyspark", "pyspark.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 # confluent-kafka ships no type hints (the C extension); treat it as Any, everywhere.
 module = ["confluent_kafka", "confluent_kafka.*"]
 ignore_missing_imports = true

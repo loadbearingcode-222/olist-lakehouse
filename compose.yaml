@@ -2,6 +2,7 @@
 #   M0 lake core: MinIO (S3) · platform-db (Postgres) · Lakekeeper (Iceberg REST) · Trino
 #   M1 source:    postgres-source (the Olist app DB) · replayer + clickstream (profile `replay`)
 #   M1 CDC:       kafka (KRaft) · cdc-setup · connect (Debezium) · connect-register · console
+#   M2 bronze:    bronze-stream (Spark Structured Streaming → Iceberg)
 #
 # Conventions
 # - Image pins are exact and were checked live (ADR-0001, CLAUDE.md "Version pins").
@@ -333,6 +334,42 @@ services:
     ports:
       - "127.0.0.1:28080:8080"
     mem_limit: 256m
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------ streaming ingest
+  bronze-stream:
+    # Kafka → Iceberg bronze, exactly once (src/olist_lakehouse/streaming/bronze.py). Spark in
+    # local mode: driver and executors share this one container (ADR-0003).
+    build:
+      context: .
+      dockerfile: docker/spark/Dockerfile
+    image: olist-lakehouse/spark:dev
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - local[4]
+      - --driver-memory
+      - 2g
+      - /opt/app/src/olist_lakehouse/streaming/bronze.py
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?run .\make.ps1 env}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?run .\make.ps1 env}
+      AWS_REGION: local-01
+    ports:
+      - "127.0.0.1:24040:4040"   # Spark UI (the Structured Streaming tab shows each query)
+    depends_on:
+      kafka:
+        condition: service_healthy
+      lakekeeper-bootstrap:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+      # Its CDC topics exist once the connector runs. This also keeps `up --wait` green: a
+      # one-shot that exits 0 counts as a failure unless someone waits for it (gotcha #29).
+      connect-register:
+        condition: service_completed_successfully
+    mem_limit: 3g
     restart: unless-stopped
 
 volumes:
