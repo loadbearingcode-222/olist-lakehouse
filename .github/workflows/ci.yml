@@ -83,3 +83,21 @@ jobs:
             echo "::error title=compose-render::IMAGE-UNPINNED: pin every image to an exact tag (ADR-0001)"
             exit 1
           fi
+
+  dbt-parse:
+    name: dbt parse
+    if: github.event.action != 'edited'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked --group dbt
+      - name: The dbt project compiles (no warehouse needed)
+        env:
+          DBT_PROJECT_DIR: dbt/olist
+          DBT_PROFILES_DIR: dbt/olist
+        run: |
+          uv run dbt deps
+          uv run dbt parse --no-partial-parse

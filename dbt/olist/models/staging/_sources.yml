@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Landed by the bronze-stream Spark job (ADR-0003), behind the quality gate (ADR-0004).
+    database: lake
+    # A var, so tests can point the same models at a fixture schema.
+    schema: "{{ var('bronze_schema', 'bronze') }}"
+    tables:
+      - name: cdc_events
+        description: One row per Kafka message from olist.olist.* (raw Debezium JSON).
+      - name: clickstream_events
+        description: One row per Kafka message from clickstream.events.

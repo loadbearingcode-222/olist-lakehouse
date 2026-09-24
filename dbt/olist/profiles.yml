@@ -1,0 +1,15 @@
+# No secrets: Trino has no authentication locally (ports bound to 127.0.0.1, ADR-0001).
+# TRINO_HOST/TRINO_PORT let the same project run from the host (defaults) or from Airflow (M4).
+olist:
+  target: dev
+  outputs:
+    dev:
+      type: trino
+      method: none
+      user: dbt
+      host: "{{ env_var('TRINO_HOST', '127.0.0.1') }}"
+      port: "{{ env_var('TRINO_PORT', '28090') | int }}"
+      http_scheme: http
+      database: lake
+      schema: silver
+      threads: 4

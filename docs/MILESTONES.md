@@ -60,6 +60,8 @@ olist-lakehouse/
 │  └─ maintenance.py                                    M4-S2  Iceberg optimize · expire_snapshots via Trino
 ├─ dbt/olist/
 │  ├─ dbt_project.yml · profiles.yml · packages.yml     M3-S1  dbt-trino
+│  ├─ package-lock.yml                                  M3-S1  dbt deps, pinned
+│  ├─ macros/ · tests/                                  M3-S1  CDC merge macros · singular data tests
 │  ├─ models/staging/ · models/silver/                  M3-S1
 │  └─ snapshots/ · models/gold/                         M3-S2
 ├─ airflow/dags/                                        M4-S1  fx_rates_daily (S1) · lakehouse_build (S2)
@@ -73,7 +75,7 @@ olist-lakehouse/
 │  ├─ doctor.ps1                                        M0-S3  port holders · Docker RAM · foreign stacks
 │  ├─ reconcile.py                                      M3-S1  Postgres ↔ silver ↔ CSV
 │  └─ demo_acceptance.py                                M5-S2  end-to-end gate → automation/runs/
-├─ automation/runs/                                     M2-S3  evidence JSON, tracked (m2-s3/: failure drills)
+├─ automation/runs/                                     M2-S3  evidence JSON, tracked (m2-s3/ drills · m3-s1/ reconcile)
 └─ docs/
    ├─ MILESTONES.md                                     M0-S1  this file (CI parses it)
    ├─ gotchas.md                                        M0-S1  seeded from GOTCHA_SEED.md

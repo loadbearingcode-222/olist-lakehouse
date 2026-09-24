@@ -113,3 +113,12 @@ Entries above the seed line were paid for by earlier projects on this machine
     --watch` can show the `edited` run, where every job but story-lint is skipped by design.
     *Check:* confirm the full suite on the head commit (or on main after merge) before calling
     it green. (M2-S1)
+32. **Every CDC delete lands on a NULL key, and deleted rows stay live in silver.** A
+    Debezium delete's `after` is JSON `null`, which is a JSON value, not SQL NULL, so
+    `coalesce(json_extract(p,'$.after'), json_extract(p,'$.before'))` picks the null object.
+    All deletes then collapse into one keyless row. *Check:* `not_null` on every key column of
+    every silver table, and choose `before`/`after` by `op`, never by coalesce. (M3-S1)
+33. **The gate quarantined a defect, yet the bad value is in silver.** With REPLICA IDENTITY
+    FULL, every later update re-sends the whole row, bad value included. The gate refuses the
+    message that *introduced* the defect, not the value. *Check:* silver's `_dq_issues` column
+    (row-level checks on current state); gold filters on it. (M3-S1)

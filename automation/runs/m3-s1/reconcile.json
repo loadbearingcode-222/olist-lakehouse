@@ -1,0 +1,123 @@
+{
+  "checked_at": "2026-09-24T15:30:05+00:00",
+  "tables": {
+    "product_category_translation": {
+      "postgres_rows": 71,
+      "silver_live_rows": 71,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 71,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "zip_geolocation": {
+      "postgres_rows": 19015,
+      "silver_live_rows": 19015,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 19015,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "sellers": {
+      "postgres_rows": 3095,
+      "silver_live_rows": 3095,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 3095,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "products": {
+      "postgres_rows": 32951,
+      "silver_live_rows": 32951,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 32951,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "customers": {
+      "postgres_rows": 99441,
+      "silver_live_rows": 99441,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 99441,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "orders": {
+      "postgres_rows": 99441,
+      "silver_live_rows": 99441,
+      "excluded_chaos_keys": 7581,
+      "excluded_but_identical": 5633,
+      "excluded_and_differing": 1948,
+      "matched": 91860,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "order_items": {
+      "postgres_rows": 112650,
+      "silver_live_rows": 110330,
+      "excluded_chaos_keys": 2320,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 2320,
+      "matched": 110330,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "order_payments": {
+      "postgres_rows": 103886,
+      "silver_live_rows": 103886,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 103886,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    },
+    "order_reviews": {
+      "postgres_rows": 98716,
+      "silver_live_rows": 98716,
+      "excluded_chaos_keys": 0,
+      "excluded_but_identical": 0,
+      "excluded_and_differing": 0,
+      "matched": 98716,
+      "missing_in_silver": 0,
+      "extra_in_silver": 0,
+      "different_values": 0,
+      "examples": []
+    }
+  },
+  "clickstream": {
+    "bronze_rows": 1208820,
+    "bronze_distinct_event_ids": 1202337,
+    "duplicates_removed": 6483,
+    "silver_events": 1202337,
+    "silver_distinct_event_ids": 1202337,
+    "sessions": 298377,
+    "ok": true
+  },
+  "verdict": "pass"
+}
