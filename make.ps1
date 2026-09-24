@@ -99,12 +99,13 @@ switch ($Target.ToLowerInvariant()) {
             @('replay-stop',   'Stop both (each resumes from its checkpoint later)'),
             @('replay-status', 'Where the replay and the clickstream are'),
             @('replay-verify', 'Row counts + chaos ledger match the checkpoint?'),
-            @('bronze-logs',   'Tail the bronze streaming job (Spark UI: http://localhost:24040)')
+            @('bronze-logs',   'Tail the bronze streaming job (Spark UI: http://localhost:24040)'),
+            @('gate-redteam',  'Plant one defect per quality rule in a throwaway Spark; each must be refused')
         ) | ForEach-Object { '    {0,-18} {1}' -f $_[0], $_[1] }
         Write-Host ''
     }
     'hooks'     { Invoke-Checked 'git' @('config', 'core.hooksPath', '.githooks'); Write-Host 'git hooks installed from .githooks/' }
-    'sync'      { Invoke-Uv @('sync', '--locked', '--group', 'dev') }
+    'sync'      { Invoke-Uv @('sync', '--locked', '--group', 'dev', '--group', 'quality') }
     'lint'      { Invoke-Uv @('run', 'ruff', 'check', '.'); Invoke-Uv @('run', 'ruff', 'format', '--check', '.') }
     'format'    { Invoke-Uv @('run', 'ruff', 'check', '--fix', '.'); Invoke-Uv @('run', 'ruff', 'format', '.') }
     'typecheck' { Invoke-Uv @('run', 'mypy') }
@@ -141,6 +142,7 @@ switch ($Target.ToLowerInvariant()) {
     }
     'replay-verify' { Invoke-Compose @('--profile', 'replay', 'run', '--rm', '--no-deps', 'replayer', 'olist_lakehouse.replayer', '--verify') }
     'bronze-logs'   { Invoke-Compose @('logs', '-f', '--tail=50', 'bronze-stream') }
+    'gate-redteam'  { Invoke-Compose @('run', '--rm', '--no-deps', 'bronze-stream', '/opt/spark/bin/spark-submit', '/opt/app/src/olist_lakehouse/quality/redteam.py') }
     'check'     {
         & $PSCommandPath sync
         & $PSCommandPath lint

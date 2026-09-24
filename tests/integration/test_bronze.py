@@ -1,11 +1,12 @@
 """Bronze is exactly-once: after a hard kill of the streaming job mid-flight, every Kafka
-message is in bronze once, no more and no fewer.
+message has landed once, no more and no fewer. Since M2-S2 a message lands in its bronze
+table OR in lake.bronze.quarantine (the quality gate), so both are counted together.
 
 Sequence: SIGKILL the job while the producers are writing, start it again, pause the producers,
 wait until bronze has caught up with Kafka, then compare per (topic, partition):
 
-    bronze rows == Kafka high watermark - low watermark      (nothing lost, nothing extra)
-    bronze rows == distinct offsets in bronze                (nothing twice)
+    landed rows == Kafka high watermark - low watermark      (nothing lost, nothing extra)
+    landed rows == distinct landed offsets                   (nothing twice)
 
 Producers are restarted afterwards if they were running. Takes 2-4 minutes.
 """
@@ -63,15 +64,19 @@ def kafka_counts() -> dict[tuple[str, int], int]:
 
 
 def bronze_counts(cursor: Any) -> tuple[dict[tuple[str, int], int], dict[tuple[str, int], int]]:
+    """Landed rows per partition: bronze tables and quarantine together."""
+    landed = " UNION ALL ".join(
+        f"SELECT kafka_topic, kafka_partition, kafka_offset FROM {table}"
+        for table in (*TABLES, "lake.bronze.quarantine")
+    )
+    cursor.execute(
+        "SELECT kafka_topic, kafka_partition, count(*), count(DISTINCT kafka_offset)"
+        f" FROM ({landed}) GROUP BY 1, 2"
+    )
     rows, distinct = {}, {}
-    for table in TABLES:
-        cursor.execute(
-            f"SELECT kafka_topic, kafka_partition, count(*), count(DISTINCT kafka_offset)"
-            f" FROM {table} GROUP BY 1, 2"
-        )
-        for topic, partition, n, d in cursor.fetchall():
-            rows[(topic, partition)] = n
-            distinct[(topic, partition)] = d
+    for topic, partition, n, d in cursor.fetchall():
+        rows[(topic, partition)] = n
+        distinct[(topic, partition)] = d
     return rows, distinct
 
 
@@ -126,4 +131,4 @@ def test_a_hard_kill_neither_loses_nor_duplicates(cursor: Any) -> None:
 
     assert rows == distinct, "some Kafka offset is stored twice"
     total = sum(rows.values())
-    print(f"\nbronze rows {total:,} across {len(rows)} partitions = Kafka offsets, all distinct")
+    print(f"\nlanded rows {total:,} across {len(rows)} partitions = Kafka offsets, all distinct")
