@@ -1,0 +1,76 @@
+# Gotchas — traps, with the ten-second check
+
+Format: **symptom → real cause → ten-second check.** Silent traps first.
+
+Entries above the seed line were paid for by earlier projects on this machine
+(`~/.claude/templates/GOTCHA_SEED.md`, wrenfield-retail, wikiflow). Provenance is in brackets.
+
+## Seeded
+
+### Environment
+1. **Containers OOM or flap despite plenty of host RAM.** WSL2 has a fixed share (32 GB on this
+   machine). *Check:* `docker info --format "{{.MemTotal}}"`; the stack's `mem_limit` total must
+   leave headroom for other stacks. [seed A2]
+2. **Ports already taken at `up`.** Another project's stack, or the native Postgres on 5432.
+   *Check:* `.\make.ps1 doctor` resolves the HOLDER of each port; ours vs foreign are different
+   outcomes. [seed A5]
+3. **`/bin/bash^M: bad interpreter` inside a container.** CRLF endings from a Windows checkout.
+   *Check:* `.gitattributes` forces LF for everything except `*.ps1`. [seed A6]
+4. **A PowerShell script breaks on an em-dash or writes UTF-16.** PowerShell 5.1 reads BOM-less
+   UTF-8 as cp1252 and writes UTF-16 by default. *Check:* `.ps1` files stay ASCII-only; pass
+   `-Encoding utf8` when writing files other tools read. [wrenfield #5]
+5. **Paths break at "data engineer".** The repo path contains a space. *Check:* quote every
+   path; ruff `PTH` keeps Python on `pathlib`. [wikiflow ADR-0004]
+
+### Shell and parsers
+6. **Backticks or `$` in an unquoted heredoc run as commands.** *Check:* quote the delimiter
+   (`<<'EOF'`) unless expansion is wanted. [seed B10]
+7. **Run parameters spliced into shell text.** *Check:* pass them through env vars, never
+   interpolate them into a command string (CI does this for PR titles). [wrenfield #9]
+
+### Git
+8. **A `!` re-include in `.gitignore` is silently inert.** A bare directory exclusion stops git
+   descending. *Check:* `git check-ignore -v <path>` in both directions (verified at init for
+   `data/olist.sha256` and `automation/runs/**/*.json`). [seed C14]
+9. **A hook that is not executable is skipped in silence.** *Check:* `git ls-files -s .githooks`
+   shows `100755`. [seed C15/C18]
+10. **A sha256 pin and `eol=lf` normalisation fight.** *Check:* never pin the hash of a file git
+    normalises; the Olist CSVs are pinned but never committed. [seed C17]
+
+### Packaging
+11. **A dependency add moved a major version somewhere else.** *Check:* diff `uv.lock` after
+    every dependency change; an unexpected moved package is a finding. [seed D20]
+
+### Containers and storage
+12. **A storage 403 that reads like a wrong password.** Often a missing LIST permission on the
+    bucket. *Check:* the policy includes `s3:ListBucket`. [seed E43]
+13. **A `chown -R` at the end of a Dockerfile doubles the image.** *Check:* create the user
+    before installing anything. [seed E34]
+14. **A named volume mounted into Airflow is root-owned, and the first write fails with an
+    error that looks like something else.** *Check:* the init service chowns the exact mount
+    target. [wrenfield CLAUDE.md]
+
+### Airflow 3
+15. **A manual trigger sits `queued` forever after `down -v`.** Every DAG is paused again.
+    *Check:* `select dag_id, is_paused from dag`. [wrenfield #1]
+16. **A bare cron schedule has a zero-width data interval.** Airflow 3 defaults to
+    `CronTriggerTimetable`. *Check:* period DAGs declare `CronDataIntervalTimetable`. [wrenfield #2]
+17. **`DagBag.get_dag()` hits the metadata DB even in a parse test.** *Check:* tests read
+    `bag.dags[...]`. [wrenfield #6]
+18. **Backfill ignores the DAG's `max_active_runs`.** *Check:* pass `--max-active-runs 1`
+    explicitly. [wrenfield CLAUDE.md]
+19. **2.x tutorials describe a different product.** *Check:* the official 3.x reference compose
+    and the live binary's `--help`, not blog posts. [wrenfield #7]
+
+### Verifiers
+20. **A CLI exits 0 for a run that failed.** *Check:* assert on the artifact the run exists to
+    produce, not the exit code. [seed F45]
+21. **A guard that fires on correct behaviour.** *Check:* assert properties (a count that must
+    be zero, an identity), never this month's values. [seed F50]
+
+---
+<!-- ======== SEED LINE: entries below are earned by THIS project ======== -->
+
+## Earned here
+
+(none yet)
