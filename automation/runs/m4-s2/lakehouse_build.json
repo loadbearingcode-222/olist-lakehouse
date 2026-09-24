@@ -1,0 +1,55 @@
+{
+  "checked_at": "2026-09-24T17:08:34+00:00",
+  "clean_run": {
+    "exit": 0,
+    "tasks": {
+      "gx_bronze_checkpoint": [
+        "success",
+        1
+      ],
+      "dbt_silver": [
+        "success",
+        1
+      ],
+      "dbt_gold": [
+        "success",
+        1
+      ],
+      "iceberg_maintenance": [
+        "success",
+        1
+      ]
+    }
+  },
+  "bronze_cdc_files": {
+    "before": 10,
+    "after": 10
+  },
+  "planted_run": {
+    "exit": 1,
+    "tasks": {
+      "gx_bronze_checkpoint": [
+        "failed",
+        1
+      ],
+      "dbt_silver": [
+        "upstream_failed",
+        0
+      ],
+      "dbt_gold": [
+        "upstream_failed",
+        0
+      ],
+      "iceberg_maintenance": [
+        "upstream_failed",
+        0
+      ]
+    }
+  },
+  "data_docs_validations": 4,
+  "latest_validation_summary": [
+    "Evaluated Expectations 5",
+    "Successful Expectations 4",
+    "Unsuccessful Expectations 1"
+  ]
+}

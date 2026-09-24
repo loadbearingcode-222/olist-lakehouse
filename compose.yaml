@@ -3,7 +3,7 @@
 #   M1 source:    postgres-source (the Olist app DB) · replayer + clickstream (profile `replay`)
 #   M1 CDC:       kafka (KRaft) · cdc-setup · connect (Debezium) · connect-register · console
 #   M2 bronze:    bronze-stream (Spark Structured Streaming → Iceberg)
-#   M4 batch:     platform-db-init · airflow-init · airflow-apiserver/scheduler/dag-processor/triggerer
+#   M4 batch:     platform-db-init · airflow-init · airflow-apiserver/scheduler/dag-processor/triggerer · data-docs
 #
 # Conventions
 # - Image pins are exact and were checked live (ADR-0001, CLAUDE.md "Version pins").
@@ -48,10 +48,12 @@ x-airflow-common: &airflow-common
     DBT_PROFILES_DIR: /opt/olist/dbt/olist
     DBT_TARGET_PATH: /opt/airflow/dbt-target   # keep dbt's output out of the bind-mounted repo
     DBT_LOG_PATH: /opt/airflow/logs/dbt
+    GX_ROOT: /opt/airflow/gx   # the bronze checkpoint's GX project and its Data Docs
   volumes:
     - ./airflow/dags:/opt/airflow/dags:ro
     - ./dbt:/opt/olist/dbt
     - airflow-logs:/opt/airflow/logs
+    - gx-data:/opt/airflow/gx
   user: "50000:0"
   depends_on: &airflow-depends-on
     platform-db-init:
@@ -165,6 +167,8 @@ services:
       - "127.0.0.1:28090:8080"
     volumes:
       - ./config/trino/catalog/lake.properties:/etc/trino/catalog/lake.properties:ro
+      - ./config/trino/jvm.config:/etc/trino/jvm.config:ro
+      - ./config/trino/config.properties:/etc/trino/config.properties:ro
     # The image's own healthcheck (/usr/lib/trino/bin/health-check) is inherited.
     mem_limit: 4g
     restart: unless-stopped
@@ -444,8 +448,8 @@ services:
     command:
       - |
         set -e
-        mkdir -p /opt/airflow/logs/dbt
-        chown -R 50000:0 /opt/airflow/logs
+        mkdir -p /opt/airflow/logs/dbt /opt/airflow/gx
+        chown -R 50000:0 /opt/airflow/logs /opt/airflow/gx
         airflow db migrate
         # One writer at a time into lake.bronze.fx_rates (Iceberg commits conflict otherwise).
         airflow pools set fx_rates_writer 1 "Serialises MERGEs into lake.bronze.fx_rates"
@@ -520,9 +524,27 @@ services:
     mem_limit: 384m
     restart: unless-stopped
 
+  data-docs:
+    # Great Expectations Data Docs for the bronze checkpoint (M4-S2), read-only. GX puts its
+    # project in a gx/ folder under GX_ROOT, hence /gx/gx/.
+    image: nginx:1.31.6-alpine
+    volumes:
+      - gx-data:/gx:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        printf 'server { listen 80; root /gx/gx/uncommitted/data_docs/local_site; index index.html; }\n' \
+          > /etc/nginx/conf.d/default.conf
+        exec nginx -g 'daemon off;'
+    ports:
+      - "127.0.0.1:28089:80"
+    mem_limit: 64m
+    restart: unless-stopped
+
 volumes:
   minio-data:
   platform-db:
   source-db:
   kafka-data:
   airflow-logs:
+  gx-data:

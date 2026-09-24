@@ -147,3 +147,9 @@ Entries above the seed line were paid for by earlier projects on this machine
     starts at D 06:00, after `--to-date D` (00:00). *Check:* schedule daily intervals at
     `0 0 * * *`, so an interval is exactly a calendar day; compare the stored dates with the
     API's own list, never with a count. (M4-S1)
+39. **Trino restarts in the middle of a dbt run ("connection refused"), and the retry passes.**
+    The image sizes the heap at 80% of the container, off-heap memory pushes it over the
+    limit, and the kernel kills it. `restart: unless-stopped` hides it. *Check:*
+    `docker inspect <trino> --format '{{.RestartCount}}'`, and `docker stats` near the limit.
+    Fix: fixed `-Xmx` well below `mem_limit`, and `query.max-memory-per-node` below the heap.
+    (M4-S2)

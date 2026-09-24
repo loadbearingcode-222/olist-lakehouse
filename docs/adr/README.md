@@ -25,3 +25,4 @@ Date: YYYY-MM-DD · Story: M#-S# · Status: accepted | superseded by NNNN
 | [0005](0005-silver-cdc-merge.md) | Silver: LSN-guarded CDC merge, soft deletes, current-state quality flags | M3-S1 |
 | [0006](0006-gold-star-schema.md) | Gold: star schema, SCD2 from the CDC log, FX as of the purchase day | M3-S2 |
 | [0007](0007-airflow-isolated-project-venv.md) | Airflow 3 runs project code from an isolated venv; history by backfill | M4-S1 |
+| [0008](0008-lakehouse-build-dag.md) | lakehouse_build: a failed bronze checkpoint stops dbt; maintenance through Trino | M4-S2 |
