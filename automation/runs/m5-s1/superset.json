@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-09-24T17:22:45+00:00",
+  "fresh_metadata_db": true,
+  "imported": true,
+  "dashboards": {
+    "Stream health": {
+      "Quarantined rows by rule": 6,
+      "Duplicates and late events (measured, handled in silver)": 2,
+      "Gate vs Great Expectations": 6
+    },
+    "Revenue": {
+      "Total revenue (USD)": 1,
+      "Revenue per month (BRL and USD)": 25,
+      "Orders per month": 25
+    },
+    "Funnel": {
+      "Funnel stages (all weeks)": 1,
+      "Sessions and conversions per week": 100,
+      "Overall conversion rate": 1
+    },
+    "Delivery SLA": {
+      "Average delivery days by customer state": 27,
+      "Late deliveries per month": 23
+    }
+  }
+}

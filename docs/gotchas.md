@@ -153,3 +153,7 @@ Entries above the seed line were paid for by earlier projects on this machine
     `docker inspect <trino> --format '{{.RestartCount}}'`, and `docker stats` near the limit.
     Fix: fixed `-Xmx` well below `mem_limit`, and `query.max-memory-per-node` below the heap.
     (M4-S2)
+40. **Superset answers a plain GET with 400 "The browser (or proxy) sent a request that this
+    server could not understand".** The client sent `Content-Type: application/json` with
+    no body, and the endpoint tried to parse it (`/api/v1/chart/{id}/data/`). *Check:* the
+    request headers. Send the JSON content type only with a body. (M5-S1)

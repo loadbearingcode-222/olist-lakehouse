@@ -1,0 +1,34 @@
+slice_name: Duplicates and late events (measured, handled in silver)
+description: null
+certified_by: null
+certification_details: null
+viz_type: table
+params:
+  datasource: 4__table
+  viz_type: table
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(gate_violations)
+    label: Events
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: kind = 'measure'
+    clause: WHERE
+  row_limit: 10000
+  time_range: No filter
+  query_mode: aggregate
+  groupby:
+  - rule
+query_context: '{"datasource": {"id": 4, "type": "table"}, "force": false, "queries":
+  [{"columns": ["rule"], "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(gate_violations)",
+  "label": "Events"}], "orderby": [], "row_limit": 10000, "filters": [], "extras":
+  {"where": "kind = ''measure''", "having": ""}, "time_range": "No filter"}], "form_data":
+  {"datasource": "4__table", "viz_type": "table", "metrics": [{"expressionType": "SQL",
+  "sqlExpression": "SUM(gate_violations)", "label": "Events"}], "adhoc_filters": [{"expressionType":
+  "SQL", "sqlExpression": "kind = ''measure''", "clause": "WHERE"}], "row_limit":
+  10000, "time_range": "No filter", "query_mode": "aggregate", "groupby": ["rule"]},
+  "result_format": "json", "result_type": "full"}'
+cache_timeout: null
+uuid: 25eeb7e7-0402-43ca-8b50-a04fabaa39e3
+version: 1.0.0
+dataset_uuid: 0c7620ac-f440-4815-9db3-227fbf66ff2c

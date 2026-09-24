@@ -111,6 +111,18 @@ silent source, or gate/GX disagreement).
   `.\make.ps1 dbt run --full-refresh --select <models>` (gotcha #35).
 - After any silver change: `.\make.ps1 reconcile` (silver vs Postgres, row by row).
 
+## Superset (dashboards)
+
+- http://localhost:28088, admin / `SUPERSET_ADMIN_PASSWORD` in `.env`. Four dashboards:
+  Revenue, Delivery SLA, Funnel, Stream health. They read only `lake.gold.mart_*`.
+- **A chart is empty:** rebuild gold (`.\make.ps1 dbt build --select path:models/gold`),
+  then check the mart in Trino. Charts hold no SQL of their own (ADR-0009).
+- **Changing a dashboard:** edit `scripts/superset_dashboards.py`, run
+  `.\make.ps1 superset-build`, and commit `superset/dashboards/`. UI edits are overwritten
+  by the next `up`, because superset-init re-imports the committed bundle.
+- `docker compose logs superset-init` should end with "dashboards imported from the
+  committed bundle".
+
 ## Replayer and clickstream
 
 - `REPLAY-FINGERPRINT-MISMATCH`: the source DB was replayed from other data, seed or rates.

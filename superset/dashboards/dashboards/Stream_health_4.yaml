@@ -1,0 +1,170 @@
+dashboard_title: Stream health
+description: null
+css: null
+slug: stream-health
+certified_by: null
+certification_details: null
+published: true
+uuid: d804979b-e510-43a8-9375-4216d4c30ef7
+position:
+  DASHBOARD_VERSION_KEY: v2
+  ROOT_ID:
+    type: ROOT
+    id: ROOT_ID
+    children:
+    - GRID_ID
+  GRID_ID:
+    type: GRID
+    id: GRID_ID
+    children:
+    - ROW-1
+    - ROW-2
+    - ROW-3
+    - ROW-N-AI285R5K
+    parents:
+    - ROOT_ID
+  HEADER_ID:
+    id: HEADER_ID
+    type: HEADER
+    meta:
+      text: Stream health
+  ROW-1:
+    type: ROW
+    id: ROW-1
+    children:
+    - MARKDOWN-notes
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  MARKDOWN-notes:
+    type: MARKDOWN
+    id: MARKDOWN-notes
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-1
+    meta:
+      width: 12
+      height: 12
+      code: 'The bronze quality gate (ADR-0004): rows refused per rule, with Great
+        Expectations'' independent count beside the gate''s.'
+  ROW-2:
+    type: ROW
+    id: ROW-2
+    children:
+    - CHART-9
+    - CHART-10
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-9:
+    type: CHART
+    id: CHART-9
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      chartId: 9
+      width: 6
+      height: 50
+      sliceName: Quarantined rows by rule
+  CHART-10:
+    type: CHART
+    id: CHART-10
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-2
+    meta:
+      chartId: 10
+      width: 6
+      height: 50
+      sliceName: Gate vs Great Expectations
+  ROW-3:
+    type: ROW
+    id: ROW-3
+    children:
+    - CHART-11
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    meta:
+      background: BACKGROUND_TRANSPARENT
+  CHART-11:
+    type: CHART
+    id: CHART-11
+    children: []
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-3
+    meta:
+      chartId: 11
+      width: 12
+      height: 50
+      sliceName: Duplicates and late events (measured, handled in silver)
+  ROW-N-AI285R5K:
+    children:
+    - CHART-N6S8V4T6
+    - CHART-SV6JZIF6
+    - CHART-45VFNWGB
+    id: ROW-N-AI285R5K
+    meta:
+      '0': ROOT_ID
+      background: BACKGROUND_TRANSPARENT
+    type: ROW
+    parents:
+    - ROOT_ID
+    - GRID_ID
+  CHART-N6S8V4T6:
+    children: []
+    id: CHART-N6S8V4T6
+    meta:
+      chartId: 10
+      height: 50
+      sliceName: Gate vs Great Expectations
+      uuid: 88e6adf8-652b-41e1-bb05-1a737f323203
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-AI285R5K
+  CHART-SV6JZIF6:
+    children: []
+    id: CHART-SV6JZIF6
+    meta:
+      chartId: 11
+      height: 50
+      sliceName: Duplicates and late events (measured, handled in silver)
+      uuid: 25eeb7e7-0402-43ca-8b50-a04fabaa39e3
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-AI285R5K
+  CHART-45VFNWGB:
+    children: []
+    id: CHART-45VFNWGB
+    meta:
+      chartId: 9
+      height: 50
+      sliceName: Quarantined rows by rule
+      uuid: 60141716-4950-4d11-bc1e-99ef82910f27
+      width: 4
+    type: CHART
+    parents:
+    - ROOT_ID
+    - GRID_ID
+    - ROW-N-AI285R5K
+theme_uuid: null
+version: 1.0.0

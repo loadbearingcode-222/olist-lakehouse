@@ -1,0 +1,33 @@
+slice_name: Late deliveries per month
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 2__table
+  viz_type: echarts_timeseries_line
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(late_share * delivered_orders) / SUM(delivered_orders)
+    label: Late share
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  x_axis: purchase_month
+  time_grain_sqla: P1M
+  groupby: []
+query_context: '{"datasource": {"id": 2, "type": "table"}, "force": false, "queries":
+  [{"columns": [{"timeGrain": "P1M", "columnType": "BASE_AXIS", "sqlExpression": "purchase_month",
+  "label": "purchase_month", "expressionType": "SQL"}], "metrics": [{"expressionType":
+  "SQL", "sqlExpression": "SUM(late_share * delivered_orders) / SUM(delivered_orders)",
+  "label": "Late share"}], "orderby": [], "row_limit": 10000, "filters": [], "extras":
+  {"where": "", "having": ""}, "time_range": "No filter"}], "form_data": {"datasource":
+  "2__table", "viz_type": "echarts_timeseries_line", "metrics": [{"expressionType":
+  "SQL", "sqlExpression": "SUM(late_share * delivered_orders) / SUM(delivered_orders)",
+  "label": "Late share"}], "adhoc_filters": [], "row_limit": 10000, "time_range":
+  "No filter", "x_axis": "purchase_month", "time_grain_sqla": "P1M", "groupby": []},
+  "result_format": "json", "result_type": "full"}'
+cache_timeout: null
+uuid: 93b91f69-092c-4820-98c2-e6099a6f591d
+version: 1.0.0
+dataset_uuid: 614699a5-b95d-454d-880a-2ab07041c6a1

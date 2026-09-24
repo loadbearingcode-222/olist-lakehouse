@@ -80,6 +80,7 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 | Great Expectations | 1.23.1 (`quality` group) | 2026-09-24 |
 | dbt-core / dbt-trino / dbt_utils | 1.12.5 / 1.10.5 / 1.4.1 | 2026-09-24 |
 | Airflow | `apache/airflow:3.3.2-python3.12` (+ `/opt/olist-venv`) | 2026-09-24 |
+| Superset | `apache/superset:6.1.0` (+ trino 0.340.0, psycopg2-binary 2.9.13) | 2026-09-25 |
 
 ## Commands
 
@@ -149,6 +150,14 @@ the image: `tests/dags`.
 iceberg_maintenance. Data Docs are at http://localhost:28089 (GX project in the `gx-data`
 volume under `gx/`). Red team: `airflow dags test lakehouse_build -c '{"plant_failure": true}'`.
 Trino's heap is fixed at 2.5 GB with a 1 GB/query cap (`config/trino/`, gotcha #39).
+
+Superset (ADR-0009): http://localhost:28088 (admin / `SUPERSET_ADMIN_PASSWORD` in .env).
+Dashboards are code: `scripts/superset_dashboards.py` builds them via the REST API
+(`.\make.ps1 superset-build`) and exports `superset/dashboards/`, which superset-init
+imports on every `up`. Charts read only the tested marts `lake.gold.mart_*`
+(`dbt/olist/models/gold/marts/`). No anonymous access: the auto-mode classifier refused
+granting it, so Claude cannot open dashboards in a browser (it must not type passwords).
+Check them through the API (tests/integration/test_superset.py) instead.
 
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.

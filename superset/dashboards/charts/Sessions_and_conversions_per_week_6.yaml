@@ -1,0 +1,37 @@
+slice_name: Sessions and conversions per week
+description: null
+certified_by: null
+certification_details: null
+viz_type: echarts_timeseries_line
+params:
+  datasource: 3__table
+  viz_type: echarts_timeseries_line
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(sessions)
+    label: Sessions
+  - expressionType: SQL
+    sqlExpression: SUM(converted_sessions)
+    label: Converted
+  adhoc_filters: []
+  row_limit: 10000
+  time_range: No filter
+  x_axis: week
+  time_grain_sqla: P1W
+  groupby: []
+query_context: '{"datasource": {"id": 3, "type": "table"}, "force": false, "queries":
+  [{"columns": [{"timeGrain": "P1W", "columnType": "BASE_AXIS", "sqlExpression": "week",
+  "label": "week", "expressionType": "SQL"}], "metrics": [{"expressionType": "SQL",
+  "sqlExpression": "SUM(sessions)", "label": "Sessions"}, {"expressionType": "SQL",
+  "sqlExpression": "SUM(converted_sessions)", "label": "Converted"}], "orderby": [],
+  "row_limit": 10000, "filters": [], "extras": {"where": "", "having": ""}, "time_range":
+  "No filter"}], "form_data": {"datasource": "3__table", "viz_type": "echarts_timeseries_line",
+  "metrics": [{"expressionType": "SQL", "sqlExpression": "SUM(sessions)", "label":
+  "Sessions"}, {"expressionType": "SQL", "sqlExpression": "SUM(converted_sessions)",
+  "label": "Converted"}], "adhoc_filters": [], "row_limit": 10000, "time_range": "No
+  filter", "x_axis": "week", "time_grain_sqla": "P1W", "groupby": []}, "result_format":
+  "json", "result_type": "full"}'
+cache_timeout: null
+uuid: 65308796-3b9c-48fd-ba97-23a76e6aa9f8
+version: 1.0.0
+dataset_uuid: 5531825b-f157-4a77-b33d-69a6c6f9caa1

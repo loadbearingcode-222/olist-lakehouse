@@ -75,6 +75,7 @@ olist-lakehouse/
 ├─ scripts/
 │  ├─ doctor.ps1                                        M0-S3  port holders · Docker RAM · foreign stacks
 │  ├─ reconcile.py                                      M3-S1  Postgres ↔ silver ↔ CSV
+│  ├─ superset_dashboards.py                            M5-S1  builds the dashboards via the API, exports the bundle
 │  └─ demo_acceptance.py                                M5-S2  end-to-end gate → automation/runs/
 ├─ automation/runs/                                     M2-S3  evidence JSON, tracked (m2-s3/ drills · m3-s1/ reconcile)
 └─ docs/
