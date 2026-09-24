@@ -114,6 +114,12 @@ Bronze: `bronze-stream` (Spark local[4]) writes `lake.bronze.cdc_events` and
 Spark UI is at http://localhost:24040. Exactly-once is by offset anti-join (ADR-0003).
 `.\make.ps1 bronze-logs` tails it.
 
+Quality gate (ADR-0004): rules in `src/olist_lakehouse/quality/rules.py`. A row lands in its
+bronze table OR `lake.bronze.quarantine` (with the rule). Per-batch gate-vs-GX counts are in
+`lake.bronze.quality_metrics` (`NOT agree` = investigate). `.\make.ps1 gate-redteam` plants
+one defect per rule in a throwaway Spark container. GX state is process-global: one lock
+(gotcha #30). Great Expectations 1.23.1 is in the `quality` dependency group.
+
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.
 

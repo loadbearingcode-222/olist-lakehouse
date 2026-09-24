@@ -100,3 +100,16 @@ Entries above the seed line were paid for by earlier projects on this machine
     one-shot service that nobody depends on counts as failed once it exits, even with exit 0.
     It passes by luck while the one-shot is still running. *Check:* every one-shot is named by
     some service's `depends_on: condition: service_completed_successfully`. (M2-S1)
+30. **Great Expectations reports 0 violations on a batch that has hundreds.** Two sources of
+    this, which together read as "all good": (a) GX puts an evaluation error inside the result
+    instead of raising, and a missing `unexpected_count` read as 0; (b) two streaming queries
+    shared one GX context, so `get_batch` swapped their dataframes and a rule ran against the
+    other query's rows. A Checker per query did NOT fix (b): GX resolves datasources through a
+    process-wide singleton (`ProjectManager`, the most recently created context), so the
+    contexts were never separate. *Check:* `lake.bronze.quality_metrics` rows with `NOT agree`,
+    and the job log for `GX could not evaluate`. Fix: one lock around every GX validation in
+    the process, and treat NULL as a disagreement. (M2-S2)
+31. **The PR checks you watched were from the wrong run.** After `gh pr edit`, `gh pr checks
+    --watch` can show the `edited` run, where every job but story-lint is skipped by design.
+    *Check:* confirm the full suite on the head commit (or on main after merge) before calling
+    it green. (M2-S1)

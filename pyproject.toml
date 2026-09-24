@@ -17,6 +17,10 @@ dev = [
     "mypy>=1.13",
     "pre-commit>=4.0",
 ]
+# The quality gate's second opinion (M2-S2): unit tests on the host, and the Spark image.
+quality = [
+    "great-expectations>=1.23,<2",
+]
 # Talks to the running stack (.\make.ps1 test-integration); CI does not install it.
 integration = [
     "trino>=0.333",
@@ -58,6 +62,12 @@ files = ["src", ".github/scripts", "tests"]
 mypy_path = ".github/scripts"
 strict = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# Great Expectations (and pandas, which it brings) ship without complete type hints.
+module = ["great_expectations", "great_expectations.*", "pandas", "pandas.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [[tool.mypy.overrides]]
 # PySpark comes from the Spark image (docker/spark/), not from uv.lock.

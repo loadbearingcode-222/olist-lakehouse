@@ -35,9 +35,9 @@ ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python \
     PYTHONUNBUFFERED=1
 WORKDIR /opt/app
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --locked --no-dev --no-install-project
+RUN uv sync --locked --no-dev --group quality --no-install-project
 COPY src ./src
-RUN uv sync --locked --no-dev && chown -R spark:spark /opt/app
+RUN uv sync --locked --no-dev --group quality && chown -R spark:spark /opt/app
 
 COPY docker/spark/spark-defaults.conf /opt/spark/conf/spark-defaults.conf
 
