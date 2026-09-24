@@ -1,0 +1,55 @@
+[project]
+name = "olist-lakehouse"
+version = "0.0.0"
+description = "Local lakehouse: Olist CDC → Kafka → Spark → Iceberg → dbt → Airflow → Trino → Superset"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests", ".github/scripts", "scripts"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes
+    "I",         # isort
+    "B",         # bugbear
+    "UP",        # pyupgrade
+    "SIM",       # simplify
+    "PTH",       # pathlib only: the repo path contains a space
+    "RUF",
+]
+ignore = ["E501"]  # the formatter owns line length
+
+[tool.ruff.lint.isort]
+known-first-party = ["olist_lakehouse", "story_lint", "layout_lint"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.12"
+files = [".github/scripts", "tests"]
+mypy_path = ".github/scripts"
+strict = true
+warn_unreachable = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = [".github/scripts"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "integration: needs the compose stack up (.\\make.ps1 test-integration)",
+]
