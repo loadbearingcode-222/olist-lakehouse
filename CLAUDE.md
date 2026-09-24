@@ -84,7 +84,7 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 .\make.ps1 up          # env + doctor + compose up --wait (lake core: MinIO, Lakekeeper, Trino)
 .\make.ps1 test-integration   # round-trip through the running stack
 .\make.ps1 reset -Force       # down -v: deletes every volume
-.\make.ps1 replay            # replayer in the background (REPLAY_SPEED 1440, CHAOS_RATE 0.02)
+.\make.ps1 replay            # replayer + clickstream in the background (REPLAY_SPEED 1440, CHAOS_RATE 0.02)
 .\make.ps1 replay-stop       # graceful; resumes from replay.checkpoint on the next `replay`
 .\make.ps1 replay-verify     # row counts + chaos ledger vs the checkpoint (stop it first)
 ```
@@ -93,6 +93,10 @@ CDC: topics `olist.olist.<table>` (3 partitions, 7-day retention), connector `ol
 (status: `curl http://127.0.0.1:28083/connectors/olist-postgres/status`), Console at
 http://localhost:28080. Wire format: ADR-0002. Kafka CLI tools from Git Bash need
 `MSYS_NO_PATHCONV=1` (gotcha #28).
+
+Clickstream: topic `clickstream.events` (key = session_id), about 12 events per order, with
+a watermark and chaos ledger in `replay.clickstream_*`. Chaos kinds are duplicate, late,
+null_product and schema_drift (`src/olist_lakehouse/clickstream/chaos.py`).
 
 Replayer facts: 866,582 events for the full dataset (2016-09-03 → 2018-10-17). At 1440× that is
 about 13 h of wall time, less because quiet gaps are skipped. The chaos rate is fixed by the
