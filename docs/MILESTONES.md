@@ -70,6 +70,7 @@ olist-lakehouse/
 ├─ tests/
 │  ├─ unit/                                             M0-S1  grows every story
 │  ├─ fixtures/                                         M0-S2  declared hazard rows
+│  ├─ dags/                                             M4-S1  DAG integrity, run inside the Airflow image
 │  └─ integration/                                      M0-S3  needs the stack; marked, run via make.ps1
 ├─ scripts/
 │  ├─ doctor.ps1                                        M0-S3  port holders · Docker RAM · foreign stacks

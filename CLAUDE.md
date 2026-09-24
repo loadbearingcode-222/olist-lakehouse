@@ -77,6 +77,9 @@ Bring other stacks down first; `.\make.ps1 doctor` (M0-S3) checks.
 | Spark | `apache/spark:4.1.3-scala2.13-java21-python3-ubuntu` (Hadoop 3.4.2) | 2026-09-24 |
 | Iceberg (Spark) | `iceberg-spark-runtime-4.1_2.13` + `iceberg-aws-bundle` 1.11.0 | 2026-09-24 |
 | Spark Kafka / S3A | `spark-sql-kafka-0-10_2.13:4.1.3`, `hadoop-aws:3.4.2`, AWS SDK `bundle:2.29.52` | 2026-09-24 |
+| Great Expectations | 1.23.1 (`quality` group) | 2026-09-24 |
+| dbt-core / dbt-trino / dbt_utils | 1.12.5 / 1.10.5 / 1.4.1 | 2026-09-24 |
+| Airflow | `apache/airflow:3.3.2-python3.12` (+ `/opt/olist-venv`) | 2026-09-24 |
 
 ## Commands
 
@@ -135,6 +138,12 @@ CDC log). Facts are fct_orders, fct_order_items (as-of seller/product) and fct_p
 (reconciles with the CSV). FX: `.\make.ps1 fx` → `bronze.fx_rates` (ECB via
 api.frankfurter.dev/v1), then `silver.fx_brl_usd_daily`. `is_trusted` marks flagged orders.
 Cast decimal aggregates before multiplying (gotcha #34).
+
+Airflow (ADR-0007): http://localhost:28082 (admin / `AIRFLOW_ADMIN_PASSWORD` in .env).
+DAGs are in `airflow/dags` (read-only mount); tasks run `$OLIST_PYTHON` / `$OLIST_DBT` from
+`/opt/olist-venv`. History comes only by `airflow backfill create ... --max-active-runs N`;
+from/to dates are data_interval_start, inclusive (wrenfield gotcha). DAG integrity runs in
+the image: `tests/dags`.
 
 Data facts and hazards (BOM, quoted line breaks, non-unique review_id, customer vs person):
 `docs/data/olist.md`. Reconciliation target: total `payment_value` = 16,008,872.12 BRL.

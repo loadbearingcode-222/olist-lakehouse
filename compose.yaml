@@ -3,6 +3,7 @@
 #   M1 source:    postgres-source (the Olist app DB) · replayer + clickstream (profile `replay`)
 #   M1 CDC:       kafka (KRaft) · cdc-setup · connect (Debezium) · connect-register · console
 #   M2 bronze:    bronze-stream (Spark Structured Streaming → Iceberg)
+#   M4 batch:     platform-db-init · airflow-init · airflow-apiserver/scheduler/dag-processor/triggerer
 #
 # Conventions
 # - Image pins are exact and were checked live (ADR-0001, CLAUDE.md "Version pins").
@@ -21,6 +22,42 @@ x-lakekeeper-env: &lakekeeper-env
 x-minio-credentials: &minio-credentials
   MINIO_ROOT_USER: ${MINIO_ROOT_USER:?run .\make.ps1 env}
   MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?run .\make.ps1 env}
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: docker/airflow/Dockerfile
+  image: olist-lakehouse/airflow:dev
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://platform:${PLATFORM_DB_PASSWORD:?run .\make.ps1 env}@platform-db:5432/airflow
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:?run .\make.ps1 env}
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET:?run .\make.ps1 env}
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__PARALLELISM: "8"
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    # The project's code and tools, isolated from Airflow's own environment (docker/airflow).
+    OLIST_PYTHON: /opt/olist-venv/bin/python
+    OLIST_DBT: /opt/olist-venv/bin/dbt
+    TRINO_HOST: trino
+    TRINO_PORT: "8080"
+    DBT_PROJECT_DIR: /opt/olist/dbt/olist
+    DBT_PROFILES_DIR: /opt/olist/dbt/olist
+    DBT_TARGET_PATH: /opt/airflow/dbt-target   # keep dbt's output out of the bind-mounted repo
+    DBT_LOG_PATH: /opt/airflow/logs/dbt
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags:ro
+    - ./dbt:/opt/olist/dbt
+    - airflow-logs:/opt/airflow/logs
+  user: "50000:0"
+  depends_on: &airflow-depends-on
+    platform-db-init:
+      condition: service_completed_successfully
+    trino:
+      condition: service_healthy
 
 services:
   # ------------------------------------------------------------------ object storage
@@ -372,8 +409,120 @@ services:
     mem_limit: 3g
     restart: unless-stopped
 
+  # ------------------------------------------------------------------ batch orchestration
+  platform-db-init:
+    # One-shot: the databases platform services keep their metadata in (idempotent).
+    image: postgres:17.11-bookworm
+    depends_on:
+      platform-db:
+        condition: service_healthy
+    environment:
+      PGHOST: platform-db
+      PGUSER: platform
+      PGPASSWORD: ${PLATFORM_DB_PASSWORD:?run .\make.ps1 env}
+      PGDATABASE: lakekeeper
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        for db in airflow superset; do
+          psql -Xqtc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
+            || psql -Xqc "CREATE DATABASE $$db"
+        done
+        echo "platform-db-init: databases airflow, superset ready"
+    restart: "no"
+
+  airflow-init:
+    <<: *airflow-common
+    # Root, to chown the named log volume (Docker creates it root-owned; gotcha #14).
+    user: "0:0"
+    environment:
+      <<: *airflow-env
+      HOME: /home/airflow   # as root, ~ would hide the airflow user's install
+      ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:?run .\make.ps1 env}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        mkdir -p /opt/airflow/logs/dbt
+        chown -R 50000:0 /opt/airflow/logs
+        airflow db migrate
+        # One writer at a time into lake.bronze.fx_rates (Iceberg commits conflict otherwise).
+        airflow pools set fx_rates_writer 1 "Serialises MERGEs into lake.bronze.fx_rates"
+        airflow users create --username admin --password "$$ADMIN_PASSWORD" \
+          --firstname olist --lastname admin --role Admin --email admin@example.invalid || true
+        echo "airflow-init: done"
+    restart: "no"
+
+  airflow-apiserver:
+    <<: *airflow-common
+    command: api-server
+    ports:
+      - "127.0.0.1:28082:8080"
+    depends_on:
+      <<: *airflow-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    mem_limit: 1g
+    restart: unless-stopped
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    depends_on:
+      <<: *airflow-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --local"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    mem_limit: 2g   # LocalExecutor: tasks (fx, dbt, GX) run inside this container
+    restart: unless-stopped
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    depends_on:
+      <<: *airflow-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type DagProcessorJob --local"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    mem_limit: 512m
+    restart: unless-stopped
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    depends_on:
+      <<: *airflow-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type TriggererJob --local"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    mem_limit: 384m
+    restart: unless-stopped
+
 volumes:
   minio-data:
   platform-db:
   source-db:
   kafka-data:
+  airflow-logs:

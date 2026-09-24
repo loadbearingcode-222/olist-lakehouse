@@ -7,6 +7,11 @@ reference rates, one per ECB business day (no weekends or TARGET holidays). Rows
 into `lake.bronze.fx_rates` on (rate_date, base, quote) through Trino, so a rerun or an
 overlapping range adds nothing. Silver fills weekends and holidays with the last known rate.
 
+Only rates dated INSIDE the requested range are written. Asked for a weekend day, the API
+answers with Friday's rate. Writing it anyway made Friday's, Saturday's and Sunday's runs
+MERGE the same row at the same moment, and Iceberg's optimistic concurrency then rejected all
+but one (ICEBERG_COMMIT_ERROR, M4-S1). A commit that still loses a race is retried.
+
 Refusals (exit 1):
     FX-HTTP          the API did not answer 200
     FX-BAD-RESPONSE  the body is not the expected shape (base, rates{date:{quote:rate}})
@@ -18,6 +23,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.request
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -76,13 +82,31 @@ def windows(start: date, end: date, days: int = 366) -> list[tuple[date, date]]:
     return out
 
 
+def in_range(rates: list[Rate], start: date, end: date) -> list[Rate]:
+    """Drop the rate the API substitutes for a non-business day (dated before `start`)."""
+    return [r for r in rates if start <= r.rate_date <= end]
+
+
 def fetch(start: date, end: date, base: str, quote: str) -> list[Rate]:
     url = f"{API}/{start.isoformat()}..{end.isoformat()}?base={base}&symbols={quote}"
     request = urllib.request.Request(url, headers={"User-Agent": "olist-lakehouse/fx"})
     with urllib.request.urlopen(request, timeout=30) as response:
         if response.status != 200:
             raise FxError("FX-HTTP", f"{url} answered {response.status}")
-        return parse(json.loads(response.read()), base, quote)
+        return in_range(parse(json.loads(response.read()), base, quote), start, end)
+
+
+def execute_with_retry(cursor: Any, sql: str, attempts: int = 5) -> None:
+    """Run a write, retrying when Iceberg reports that a concurrent commit won the race."""
+    for attempt in range(1, attempts + 1):
+        try:
+            cursor.execute(sql)
+            cursor.fetchall()
+            return
+        except Exception as exc:  # trino raises several classes; the name is what matters
+            if "ICEBERG_COMMIT_ERROR" not in str(exc) or attempt == attempts:
+                raise
+            time.sleep(0.5 * 2**attempt)
 
 
 def merge_sql(rates: list[Rate], source: str) -> str:
@@ -114,8 +138,7 @@ def load(start: date, end: date, *, base: str = "BRL", quote: str = "USD") -> di
         rates = fetch(window_start, window_end, base, quote)
         fetched += len(rates)
         if rates:
-            cursor.execute(merge_sql(rates, "ECB via frankfurter.dev"))
-            cursor.fetchall()
+            execute_with_retry(cursor, merge_sql(rates, "ECB via frankfurter.dev"))
     cursor.execute(
         f"SELECT count(*) FROM {TABLE} WHERE base = '{base}' AND quote = '{quote}'"
         f" AND rate_date BETWEEN DATE '{start}' AND DATE '{end}'"

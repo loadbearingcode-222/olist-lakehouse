@@ -71,6 +71,28 @@ the two implementations is wrong. Read `GX could not evaluate` lines first (gotc
 compare the rule's predicate in `quality/rules.py` with its expectation in `expect.py`.
 `.\make.ps1 gate-redteam` re-checks every rule on planted rows.
 
+## Airflow
+
+UI at http://localhost:28082 (user `admin`, password `AIRFLOW_ADMIN_PASSWORD` in `.env`).
+DAGs are created paused (`DAGS_ARE_PAUSED_AT_CREATION`). After a `reset`, unpause again, or a
+manual trigger sits `queued` forever (gotcha #15).
+
+**Load FX history** (the DAG never catches up by itself, `catchup=False`):
+```powershell
+docker compose exec airflow-scheduler airflow dags unpause fx_rates_daily
+docker compose exec airflow-scheduler airflow backfill create --dag-id fx_rates_daily --from-date 2016-08-25 --to-date 2018-10-31 --max-active-runs 6
+```
+`--from-date`/`--to-date` are `data_interval_start` values and inclusive. Always pass
+`--max-active-runs`: a backfill ignores the DAG's own setting (gotcha #18).
+
+**Rerun one day:** `docker compose exec airflow-scheduler airflow tasks test fx_rates_daily load_rate 2017-03-15`
+adds nothing if the rate is already stored (MERGE on the date).
+
+**Where did a backfill get to?**
+```powershell
+docker compose exec platform-db psql -U platform -d airflow -c "select state, count(*) from dag_run where dag_id = 'fx_rates_daily' group by 1;"
+```
+
 ## dbt (silver and gold)
 
 - `.\make.ps1 dbt build` runs everything: silver merges incrementally and gold is rebuilt.

@@ -5,7 +5,8 @@
 .env
 data
 automation
-tests
+tests/*
+!tests/dags
 docs
 **/__pycache__
 .mypy_cache

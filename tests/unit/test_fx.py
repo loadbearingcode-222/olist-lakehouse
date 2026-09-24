@@ -46,6 +46,36 @@ def test_an_unexpected_body_is_refused(broken: dict[str, object]) -> None:
     assert refused.value.code == "FX-BAD-RESPONSE"
 
 
+def test_a_weekend_request_writes_nothing() -> None:
+    """Asked for a Saturday, the API answers with Friday's rate; that is not Saturday's to write."""
+    friday = fx.parse({"base": "BRL", "rates": {"2016-09-02": {"USD": 0.30625}}}, "BRL", "USD")
+    assert fx.in_range(friday, date(2016, 9, 3), date(2016, 9, 3)) == []
+    assert fx.in_range(friday, date(2016, 9, 2), date(2016, 9, 3)) == friday
+
+
+def test_a_lost_iceberg_commit_race_is_retried_but_other_errors_are_not() -> None:
+    class Cursor:
+        def __init__(self, failures: list[Exception]) -> None:
+            self.failures, self.calls = failures, 0
+
+        def execute(self, sql: str) -> None:
+            self.calls += 1
+            if self.failures:
+                raise self.failures.pop(0)
+
+        def fetchall(self) -> list[object]:
+            return []
+
+    racing = Cursor([RuntimeError("ICEBERG_COMMIT_ERROR: conflicting files")])
+    fx.execute_with_retry(racing, "MERGE ...")
+    assert racing.calls == 2
+
+    broken = Cursor([RuntimeError("SYNTAX_ERROR")])
+    with pytest.raises(RuntimeError):
+        fx.execute_with_retry(broken, "MERGE ...")
+    assert broken.calls == 1
+
+
 def test_windows_cover_the_range_exactly_once() -> None:
     parts = fx.windows(date(2016, 8, 25), date(2018, 10, 31))
     assert parts[0][0] == date(2016, 8, 25) and parts[-1][1] == date(2018, 10, 31)
