@@ -50,11 +50,12 @@ function ConvertTo-Bytes {
 }
 
 # 0. Path -----------------------------------------------------------------------------------
-# confluent-kafka's DLLs sit about 100 characters below the repo root (.venv\Lib\site-packages\n# confluent_kafka.libs\libcrypto-3-x64-<hash>.dll), and Windows refuses to load a DLL whose
-# path reaches MAX_PATH (260). 120 leaves a margin for longer wheel names.
+# confluent-kafka's deepest DLL is exactly 100 characters below the repo root (.venv\Lib\n# site-packages\confluent_kafka.libs\libcrypto-3-x64-<32-char hash>.dll). Measured: a repo
+# 159 characters deep put it at 259 and the load failed (MAX_PATH is 260). Capping the repo at
+# 150 keeps every DLL at 250 or under.
 $repoRoot = Split-Path -Parent $PSScriptRoot
-if ($repoRoot.Length -gt 120) {
-    $refusals.Add("DOCTOR-PATH-LONG: the repo path is $($repoRoot.Length) characters (max 120); clone it somewhere shorter")
+if ($repoRoot.Length -gt 150) {
+    $refusals.Add("DOCTOR-PATH-LONG: the repo path is $($repoRoot.Length) characters (max 150); clone it somewhere shorter")
 }
 
 # 1. Docker ---------------------------------------------------------------------------------
