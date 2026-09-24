@@ -47,6 +47,7 @@ function Invoke-Env {
         'PLATFORM_DB_PASSWORD'      = (New-Secret)
         'LAKEKEEPER_ENCRYPTION_KEY' = (New-Secret 48)
         'SOURCE_DB_PASSWORD'        = (New-Secret)
+        'DEBEZIUM_DB_PASSWORD'      = (New-Secret)
     }
     $keys = @(Get-Content -LiteralPath '.env.example' | Where-Object { $_ -match '^([A-Z0-9_]+)=$' } | ForEach-Object { $_.TrimEnd('=') })
     $missing = @($keys | Where-Object { -not $values.ContainsKey($_) })

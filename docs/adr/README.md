@@ -19,3 +19,4 @@ Date: YYYY-MM-DD · Story: M#-S# · Status: accepted | superseded by NNNN
 | ADR | Decision | Story |
 |---|---|---|
 | [0001](0001-lake-core-stack-and-pins.md) | Lake core: Lakekeeper + MinIO + Trino, exact image pins | M0-S3 |
+| [0002](0002-cdc-json-without-schema-registry.md) | CDC as plain JSON, no schema registry | M1-S2 |
